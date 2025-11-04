@@ -7,6 +7,7 @@ import { Button } from "@/components/ui/button";
 import heroImage from "@/assets/hero-placeholder.jpg";
 
 // Sample movies for demo - 6 popular Indian movies
+const SAMPLE_DATA_VERSION = '2.0'; // Indian movies version
 const sampleMovies: Movie[] = [
   { 
     id: "tt1187043", 
@@ -60,30 +61,37 @@ export default function Home() {
   useEffect(() => {
     const loadMovies = async () => {
       console.log('Loading movies...');
-      await movieStore.loadFromStorage();
+      
+      // Check version first
+      const currentVersion = localStorage.getItem('movieDataVersion');
+      const needsVersionUpdate = currentVersion !== SAMPLE_DATA_VERSION;
+      
+      if (needsVersionUpdate) {
+        console.log(`Version mismatch (${currentVersion} -> ${SAMPLE_DATA_VERSION}). Clearing old data...`);
+        movieStore.clearAll();
+      } else {
+        await movieStore.loadFromStorage();
+      }
+      
       let allMovies = movieStore.getAllMovies();
       console.log('Movies from storage:', allMovies.length);
 
-      // Check if we need to load sample movies (empty or old format without posters)
-      const needsSampleData = allMovies.length === 0 || 
-        allMovies.every(movie => !movie.posterUrl);
+      // Check if we need to load sample movies
+      const needsSampleData = allMovies.length === 0 || needsVersionUpdate;
 
       console.log('Needs sample data?', needsSampleData);
 
       if (needsSampleData) {
-        // Clear old data if it exists
-        if (allMovies.length > 0) {
-          console.log('Clearing old movies without posters');
-          localStorage.removeItem('movies');
-        }
-        
-        console.log('Loading sample movies:', sampleMovies.length);
+        console.log('Loading 6 Indian sample movies...');
         // Load sample movies with poster URLs
         for (const movie of sampleMovies) {
           await movieStore.addMovie(movie);
         }
         allMovies = movieStore.getAllMovies();
         console.log('After loading samples:', allMovies.length);
+        
+        // Save version
+        localStorage.setItem('movieDataVersion', SAMPLE_DATA_VERSION);
       }
 
       setMovies(allMovies);

@@ -113,6 +113,23 @@ export class MovieStore {
     return this.avlTree;
   }
 
+  clearAll() {
+    // Clear both data structures
+    this.hashTable = new HashTable();
+    this.avlTree = new AVLTree();
+    
+    // Re-attach listeners
+    const eventCollector = (event: VisualizationEvent) => {
+      this.eventQueue.push(event);
+    };
+    this.hashTable.addListener(eventCollector);
+    this.avlTree.addListener(eventCollector);
+    
+    // Clear storage
+    localStorage.removeItem('movies');
+    localStorage.removeItem('movieDataVersion');
+  }
+
   private persist() {
     const movies = this.getAllMovies();
     localStorage.setItem('movies', JSON.stringify(movies));
