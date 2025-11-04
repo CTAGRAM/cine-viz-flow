@@ -98,6 +98,7 @@ export function AVLTreeView({ events, root }: AVLTreeViewProps) {
     const elements: JSX.Element[] = [];
     const isHighlighted = highlightedNode === node.movie.id;
     const rank = rankedNodes.get(node.movie.id);
+    const clipId = `clip-circle-${node.movie.id}`;
 
     // Draw connections to children
     if (node.left && node.left.x !== undefined && node.left.y !== undefined) {
@@ -145,26 +146,49 @@ export function AVLTreeView({ events, root }: AVLTreeViewProps) {
         }}
         transition={{ duration: 0.3 }}
       >
-        {/* Node circle with poster or colored background */}
+        {/* Clip path definition */}
+        <defs>
+          <clipPath id={clipId}>
+            <circle cx={node.x} cy={node.y} r="30" />
+          </clipPath>
+        </defs>
+
+        {/* Movie poster background */}
+        {node.movie.posterUrl && (
+          <image
+            href={node.movie.posterUrl}
+            x={node.x - 35}
+            y={node.y - 35}
+            width="70"
+            height="70"
+            clipPath={`url(#${clipId})`}
+            preserveAspectRatio="xMidYMid slice"
+          />
+        )}
+        
+        {/* Node circle border */}
         <circle
           cx={node.x}
           cy={node.y}
           r="35"
-          fill={isHighlighted ? 'hsl(var(--primary))' : 'hsl(var(--card))'}
+          fill={node.movie.posterUrl ? 'transparent' : (isHighlighted ? 'hsl(var(--primary))' : 'hsl(var(--card))')}
           stroke={isHighlighted ? 'hsl(var(--primary))' : 'hsl(var(--border))'}
           strokeWidth="3"
         />
-        
-        {node.movie.posterUrl ? (
-          <image
-            href={node.movie.posterUrl}
-            x={node.x - 30}
-            y={node.y - 30}
-            width="60"
-            height="60"
-            clipPath={`circle(28px at ${node.x}px ${node.y}px)`}
+
+        {/* Semi-transparent overlay for text visibility when poster exists */}
+        {node.movie.posterUrl && (
+          <circle
+            cx={node.x}
+            cy={node.y}
+            r="35"
+            fill="hsl(var(--background))"
+            opacity="0.7"
           />
-        ) : (
+        )}
+        
+        {/* Movie name abbreviation in center if no poster */}
+        {!node.movie.posterUrl && (
           <text
             x={node.x}
             y={node.y}

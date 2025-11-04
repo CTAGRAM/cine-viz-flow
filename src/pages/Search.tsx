@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Search as SearchIcon } from 'lucide-react';
+import { Search as SearchIcon, Eye } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { MovieCard } from '@/components/MovieCard';
@@ -7,13 +7,16 @@ import { movieStore } from '@/lib/movieStore';
 import { Movie } from '@/lib/dataStructures';
 import { useToast } from '@/hooks/use-toast';
 import { Slider } from '@/components/ui/slider';
+import { useNavigate } from 'react-router-dom';
 
 export default function Search() {
   const [searchQuery, setSearchQuery] = useState('');
   const [results, setResults] = useState<Movie[]>([]);
   const [minRating, setMinRating] = useState(0);
   const [maxRating, setMaxRating] = useState(10);
+  const [foundInBucket, setFoundInBucket] = useState<number | null>(null);
   const { toast } = useToast();
+  const navigate = useNavigate();
 
   const handleSearch = async () => {
     if (!searchQuery.trim()) {
@@ -29,9 +32,10 @@ export default function Search() {
     const exactMatch = await movieStore.searchMovie(searchQuery.trim());
     
     if (exactMatch) {
+      setFoundInBucket(0); // Mark as found via hash table
       setResults([exactMatch]);
       toast({
-        title: "Movie found",
+        title: "Movie found! 🎬",
         description: `Found "${exactMatch.name}" via Hash Table lookup`
       });
     } else {
@@ -43,6 +47,7 @@ export default function Search() {
         movie.rating <= maxRating
       );
       
+      setFoundInBucket(null);
       setResults(filtered);
       
       if (filtered.length === 0) {
@@ -117,9 +122,29 @@ export default function Search() {
         {/* Results */}
         {results.length > 0 ? (
           <div className="space-y-4">
-            <h2 className="text-2xl font-bold">
-              {results.length} Result{results.length > 1 ? 's' : ''}
-            </h2>
+            <div className="flex items-center justify-between">
+              <h2 className="text-2xl font-bold">
+                {results.length} Result{results.length > 1 ? 's' : ''}
+              </h2>
+              {foundInBucket !== null && (
+                <Button
+                  onClick={() => navigate('/visualizer')}
+                  variant="outline"
+                  size="lg"
+                >
+                  <Eye className="w-4 h-4 mr-2" />
+                  View Search Path in Visualizer
+                </Button>
+              )}
+            </div>
+            {foundInBucket !== null && (
+              <div className="bg-primary/10 border border-primary/30 rounded-lg p-4">
+                <p className="text-sm">
+                  <span className="font-semibold">Found via Hash Table lookup!</span>
+                  <span className="text-muted-foreground ml-2">Click "View Search Path" to see the visualization.</span>
+                </p>
+              </div>
+            )}
             <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-4">
               {results.map((movie) => (
                 <MovieCard key={movie.id} movie={movie} />
