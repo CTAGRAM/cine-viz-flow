@@ -6,28 +6,49 @@ import { Play, Info, ChevronRight } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import heroImage from "@/assets/hero-placeholder.jpg";
 
-// Sample movies for demo - kept simple with just 3 iconic movies
+// Sample movies for demo - 6 popular Indian movies
 const sampleMovies: Movie[] = [
   { 
-    id: "tt0468569", 
-    name: "The Dark Knight", 
-    rating: 9.0, 
-    year: 2008,
-    posterUrl: "https://m.media-amazon.com/images/M/MV5BMTMxNTMwODM0NF5BMl5BanBnXkFtZTcwODAyMTk2Mw@@._V1_SX300.jpg"
+    id: "tt1187043", 
+    name: "3 Idiots", 
+    rating: 8.4, 
+    year: 2009,
+    posterUrl: "https://m.media-amazon.com/images/M/MV5BNTkyOGVjMGEtNmQzZi00NzFlLTlhOWQtODYyMDc2ZGJmYzFhXkEyXkFqcGdeQXVyNjU0OTQ0OTY@._V1_SX300.jpg"
   },
   { 
-    id: "tt0110912", 
-    name: "Pulp Fiction", 
-    rating: 8.8, 
-    year: 1994,
-    posterUrl: "https://m.media-amazon.com/images/M/MV5BYTViYTE3ZGQtNDBlMC00ZTAyLTkyODMtZGRiZDg0MjA2YThkXkEyXkFqcGc@._V1_SX300.jpg"
+    id: "tt5074352", 
+    name: "Dangal", 
+    rating: 8.3, 
+    year: 2016,
+    posterUrl: "https://m.media-amazon.com/images/M/MV5BMTQ4MzQzMzM2Nl5BMl5BanBnXkFtZTgwMTQ1NzU3MDI@._V1_SX300.jpg"
   },
   { 
-    id: "tt0133093", 
-    name: "The Matrix", 
-    rating: 8.7, 
-    year: 1999,
-    posterUrl: "https://m.media-amazon.com/images/M/MV5BN2NmN2VhMTQtMDNiOS00NDlhLTliMjgtODE2ZTY0ODQyNDRhXkEyXkFqcGc@._V1_SX300.jpg"
+    id: "tt2338151", 
+    name: "PK", 
+    rating: 8.1, 
+    year: 2014,
+    posterUrl: "https://m.media-amazon.com/images/M/MV5BMTYzOTE2NjkxN15BMl5BanBnXkFtZTgwMDgzMTg0MzE@._V1_SX300.jpg"
+  },
+  { 
+    id: "tt4849438", 
+    name: "Baahubali 2: The Conclusion", 
+    rating: 8.2, 
+    year: 2017,
+    posterUrl: "https://m.media-amazon.com/images/M/MV5BYTJlYmY2OGQtNDZmMi00MmQwLWI1Y2UtYjk3ZWU1YWYzNmM5XkEyXkFqcGdeQXVyNjQ2MjQ5NzM@._V1_SX300.jpg"
+  },
+  { 
+    id: "tt0986264", 
+    name: "Taare Zameen Par", 
+    rating: 8.3, 
+    year: 2007,
+    posterUrl: "https://m.media-amazon.com/images/M/MV5BMDhjZWViN2MtNzgxOS00NmI4LThiZDQtZDI3MzM4MDE4NTJmXkEyXkFqcGdeQXVyMTMxODk2OTU@._V1_SX300.jpg"
+  },
+  { 
+    id: "tt0169102", 
+    name: "Lagaan", 
+    rating: 8.1, 
+    year: 2001,
+    posterUrl: "https://m.media-amazon.com/images/M/MV5BNDYxNzQ5ZjItM2JlMi00MjlhLTk5NjAtMTRkZWVkOTg0NjcwXkEyXkFqcGdeQXVyNjQ2MjQ5NzM@._V1_SX300.jpg"
   },
 ];
 
