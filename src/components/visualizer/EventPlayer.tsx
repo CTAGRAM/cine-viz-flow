@@ -22,13 +22,15 @@ export function EventPlayer({
   onSpeedChange,
   onJumpTo
 }: EventPlayerProps) {
+  const speeds = [0.5, 1, 1.5, 2];
+
   return (
     <div className="border-t bg-card p-4 space-y-4">
       {/* Timeline Scrubber */}
       <div className="space-y-2">
         <div className="flex items-center justify-between text-sm text-muted-foreground">
-          <span>Event {state.currentIndex + 1} of {state.events.length}</span>
-          <span>{state.speed}x speed</span>
+          <span className="font-medium">Step {state.currentIndex + 1} of {state.events.length}</span>
+          <span>{state.speed}× speed</span>
         </div>
         <Slider
           value={[state.currentIndex]}
@@ -40,45 +42,39 @@ export function EventPlayer({
       </div>
 
       {/* Playback Controls */}
-      <div className="flex items-center justify-center gap-2">
-        <Button
-          variant="outline"
-          size="icon"
-          onClick={onStepBackward}
-          disabled={state.currentIndex === 0}
-        >
-          <ChevronLeft className="h-4 w-4" />
-        </Button>
-        
+      <div className="flex items-center justify-center gap-3">
         <Button
           variant="outline"
           size="icon"
           onClick={() => onJumpTo(0)}
           disabled={state.currentIndex === 0}
+          title="Restart"
         >
           <SkipBack className="h-4 w-4" />
         </Button>
 
         <Button
+          variant="outline"
+          size="icon"
+          onClick={onStepBackward}
+          disabled={state.currentIndex === 0}
+          title="Previous Step"
+        >
+          <ChevronLeft className="h-4 w-4" />
+        </Button>
+        
+        <Button
           variant="default"
           size="icon"
           onClick={state.isPlaying ? onPause : onPlay}
-          className="h-12 w-12"
+          className="h-14 w-14"
+          title={state.isPlaying ? "Pause" : "Play"}
         >
           {state.isPlaying ? (
-            <Pause className="h-5 w-5" />
+            <Pause className="h-6 w-6" />
           ) : (
-            <Play className="h-5 w-5 ml-0.5" />
+            <Play className="h-6 w-6 ml-0.5" />
           )}
-        </Button>
-
-        <Button
-          variant="outline"
-          size="icon"
-          onClick={() => onJumpTo(state.events.length - 1)}
-          disabled={state.currentIndex >= state.events.length - 1}
-        >
-          <SkipForward className="h-4 w-4" />
         </Button>
 
         <Button
@@ -86,23 +82,36 @@ export function EventPlayer({
           size="icon"
           onClick={onStepForward}
           disabled={state.currentIndex >= state.events.length - 1}
+          title="Next Step"
         >
           <ChevronRight className="h-4 w-4" />
         </Button>
+
+        <Button
+          variant="outline"
+          size="icon"
+          onClick={() => onJumpTo(state.events.length - 1)}
+          disabled={state.currentIndex >= state.events.length - 1}
+          title="Skip to End"
+        >
+          <SkipForward className="h-4 w-4" />
+        </Button>
       </div>
 
-      {/* Speed Control */}
-      <div className="flex items-center gap-4">
-        <span className="text-sm text-muted-foreground min-w-[60px]">Speed:</span>
-        <Slider
-          value={[state.speed]}
-          min={0.25}
-          max={2}
-          step={0.25}
-          onValueChange={([value]) => onSpeedChange(value)}
-          className="flex-1"
-        />
-        <span className="text-sm font-medium min-w-[40px] text-right">{state.speed}x</span>
+      {/* Speed Control - Simplified Buttons */}
+      <div className="flex items-center justify-center gap-2">
+        <span className="text-sm text-muted-foreground mr-2">Speed:</span>
+        {speeds.map(speed => (
+          <Button
+            key={speed}
+            variant={state.speed === speed ? "default" : "outline"}
+            size="sm"
+            onClick={() => onSpeedChange(speed)}
+            className="min-w-[60px]"
+          >
+            {speed}×
+          </Button>
+        ))}
       </div>
     </div>
   );

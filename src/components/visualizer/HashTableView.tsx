@@ -1,127 +1,207 @@
-import { VisualizationEvent } from '@/lib/dataStructures';
-import { cn } from '@/lib/utils';
+import { VisualizationEvent, Movie } from '@/lib/dataStructures';
 import { useEffect, useState } from 'react';
+import { motion, AnimatePresence } from 'framer-motion';
+import { Hash } from 'lucide-react';
 
 interface HashTableViewProps {
   events: VisualizationEvent[];
-  buckets: any[][];
+  buckets: Movie[][];
 }
 
 export function HashTableView({ events, buckets }: HashTableViewProps) {
   const [activeEvent, setActiveEvent] = useState<VisualizationEvent | null>(null);
   const [highlightedBucket, setHighlightedBucket] = useState<number | null>(null);
-  const [highlightedIndex, setHighlightedIndex] = useState<number | null>(null);
-  const [isResizing, setIsResizing] = useState(false);
+  const [narration, setNarration] = useState<string>('');
+  const [hashCalculation, setHashCalculation] = useState<{ movieId: string; bucket: number } | null>(null);
+
+  // Rebuild state progressively based on events
+  const [progressiveBuckets, setProgressiveBuckets] = useState<Movie[][]>([]);
 
   useEffect(() => {
     if (events.length === 0) return;
+
+    const lastEvent = events[events.length - 1];
+    setActiveEvent(lastEvent);
+
+    // Build up the hash table state progressively
+    const tempBuckets: Movie[][] = Array.from({ length: buckets.length }, () => []);
     
-    const currentEvent = events[events.length - 1];
-    setActiveEvent(currentEvent);
+    events.forEach(event => {
+      if (event.type === 'hash-insert') {
+        const movie = buckets[event.bucket]?.find(m => m.id === event.movieId);
+        if (movie && !tempBuckets[event.bucket].find(m => m.id === movie.id)) {
+          tempBuckets[event.bucket].push(movie);
+        }
+      } else if (event.type === 'hash-update') {
+        const movie = buckets[event.bucket]?.find(m => m.id === event.movieId);
+        if (movie) {
+          const index = tempBuckets[event.bucket].findIndex(m => m.id === movie.id);
+          if (index >= 0) {
+            tempBuckets[event.bucket][index] = movie;
+          }
+        }
+      }
+    });
 
-    // Reset highlights
-    setHighlightedBucket(null);
-    setHighlightedIndex(null);
-    setIsResizing(false);
+    setProgressiveBuckets(tempBuckets);
 
-    // Apply highlights based on event
-    if (currentEvent.type === 'hash-probe' || currentEvent.type === 'hash-insert' || currentEvent.type === 'hash-update') {
-      setHighlightedBucket(currentEvent.bucket);
-    } else if (currentEvent.type === 'hash-chain-compare') {
-      setHighlightedBucket(currentEvent.bucket);
-      setHighlightedIndex(currentEvent.index);
-    } else if (currentEvent.type === 'hash-resize-start') {
-      setIsResizing(true);
+    // Set narration and highlights based on current event
+    switch (lastEvent.type) {
+      case 'hash-probe':
+        setHighlightedBucket(lastEvent.bucket);
+        setNarration(`Calculating hash for "${lastEvent.movieId}"...`);
+        setHashCalculation({ movieId: lastEvent.movieId, bucket: lastEvent.bucket });
+        break;
+      case 'hash-chain-compare':
+        setHighlightedBucket(lastEvent.bucket);
+        setNarration(lastEvent.match ? `✓ Match found in bucket ${lastEvent.bucket}!` : `Comparing in chain...`);
+        break;
+      case 'hash-insert':
+        setHighlightedBucket(lastEvent.bucket);
+        setNarration(`✓ Inserted "${lastEvent.movieId}" into bucket ${lastEvent.bucket}`);
+        break;
+      case 'hash-update':
+        setHighlightedBucket(lastEvent.bucket);
+        setNarration(`✓ Updated "${lastEvent.movieId}" in bucket ${lastEvent.bucket}`);
+        break;
+      case 'hash-resize-start':
+        setNarration(`⚠️ Resizing hash table: ${lastEvent.oldSize} → ${lastEvent.newSize} buckets`);
+        break;
+      case 'hash-rehash':
+        setNarration(`Rehashing "${lastEvent.movieId}": bucket ${lastEvent.oldBucket} → ${lastEvent.newBucket}`);
+        break;
+      case 'hash-resize-complete':
+        setNarration('✓ Resize complete!');
+        break;
+      default:
+        setNarration('');
     }
 
-    // Auto-clear highlights
     const timer = setTimeout(() => {
       setHighlightedBucket(null);
-      setHighlightedIndex(null);
-    }, 800);
+      setHashCalculation(null);
+    }, 2000);
 
     return () => clearTimeout(timer);
-  }, [events]);
+  }, [events, buckets]);
 
-  const metrics = {
-    items: buckets.reduce((sum, bucket) => sum + bucket.length, 0),
-    capacity: buckets.length,
-    loadFactor: buckets.reduce((sum, bucket) => sum + bucket.length, 0) / buckets.length,
-    collisions: buckets.filter(b => b.length > 1).length
-  };
+  const totalItems = progressiveBuckets.reduce((sum, bucket) => sum + bucket.length, 0);
+  const loadFactor = (totalItems / progressiveBuckets.length).toFixed(2);
+  const collisions = progressiveBuckets.filter(b => b.length > 1).length;
 
   return (
-    <div className="h-full flex flex-col">
-      <div className="flex-1 overflow-auto p-6">
-        <div className="flex gap-2 min-w-max">
-          {buckets.map((bucket, bucketIndex) => (
-            <div
-              key={bucketIndex}
-              className={cn(
-                "flex flex-col items-center min-w-[120px] transition-all duration-300",
-                highlightedBucket === bucketIndex && "scale-105"
-              )}
-            >
-              {/* Bucket Header */}
-              <div
-                className={cn(
-                  "w-full text-center py-2 px-3 rounded-t-lg border-b-2 font-mono text-sm font-semibold transition-all duration-300",
-                  highlightedBucket === bucketIndex
-                    ? "bg-primary text-primary-foreground border-primary animate-pulse-glow"
-                    : "bg-muted text-muted-foreground border-border"
-                )}
-              >
-                [{bucketIndex}]
-              </div>
+    <div className="flex-1 flex flex-col overflow-hidden">
+      {/* Narration */}
+      <AnimatePresence mode="wait">
+        {narration && (
+          <motion.div
+            key={narration}
+            initial={{ opacity: 0, y: -10 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -10 }}
+            className="bg-primary/10 text-primary px-6 py-3 text-center font-medium border-b"
+          >
+            {narration}
+          </motion.div>
+        )}
+      </AnimatePresence>
 
-              {/* Chain */}
-              <div className="w-full bg-card border border-t-0 rounded-b-lg p-2 min-h-[100px] space-y-2">
-                {bucket.length === 0 ? (
-                  <div className="text-muted-foreground text-xs text-center py-4">Empty</div>
-                ) : (
-                  bucket.map((movie, index) => (
-                    <div
-                      key={`${movie.id}-${index}`}
-                      className={cn(
-                        "p-2 rounded-lg border text-xs font-mono transition-all duration-300",
-                        highlightedBucket === bucketIndex && highlightedIndex === index
-                          ? activeEvent?.type === 'hash-chain-compare' && 'match' in activeEvent && activeEvent.match
-                            ? "bg-green-500/20 border-green-500 animate-bounce"
-                            : "bg-red-500/20 border-red-500"
-                          : "bg-muted border-border hover:border-primary"
-                      )}
-                    >
-                      <div className="font-semibold truncate">{movie.id}</div>
-                      <div className="text-muted-foreground truncate text-[10px]">{movie.name}</div>
-                      <div className="text-primary font-bold">★ {movie.rating}</div>
-                    </div>
-                  ))
-                )}
+      {/* Hash Calculation Display */}
+      <AnimatePresence>
+        {hashCalculation && (
+          <motion.div
+            initial={{ scale: 0.8, opacity: 0 }}
+            animate={{ scale: 1, opacity: 1 }}
+            exit={{ scale: 0.8, opacity: 0 }}
+            className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 z-10"
+          >
+            <div className="bg-card border-2 border-primary rounded-lg p-6 shadow-2xl">
+              <div className="flex items-center gap-3 mb-3">
+                <Hash className="h-6 w-6 text-primary" />
+                <span className="font-bold text-lg">Hash Calculation</span>
+              </div>
+              <div className="space-y-2 font-mono text-sm">
+                <div>Input: <span className="text-primary font-bold">{hashCalculation.movieId}</span></div>
+                <div className="text-muted-foreground">hash(id) % {progressiveBuckets.length}</div>
+                <div className="text-xl font-bold text-green-500">→ Bucket {hashCalculation.bucket}</div>
               </div>
             </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      {/* Buckets Grid */}
+      <div className="flex-1 overflow-auto p-6">
+        <div className="grid grid-cols-4 gap-4">
+          {progressiveBuckets.map((bucket, index) => (
+            <motion.div
+              key={index}
+              initial={{ opacity: 0, scale: 0.9 }}
+              animate={{
+                opacity: 1,
+                scale: highlightedBucket === index ? 1.05 : 1,
+                borderColor: highlightedBucket === index ? 'hsl(var(--primary))' : 'hsl(var(--border))'
+              }}
+              className="border-2 rounded-lg bg-card overflow-hidden transition-all"
+            >
+              <div className={`px-3 py-2 text-sm font-semibold border-b flex items-center justify-between ${
+                highlightedBucket === index ? 'bg-primary text-primary-foreground' : 'bg-muted'
+              }`}>
+                <span>Bucket {index}</span>
+                <span className="text-xs">{bucket.length}</span>
+              </div>
+              
+              <div className="p-2 space-y-2 min-h-[100px]">
+                <AnimatePresence>
+                  {bucket.map((movie, movieIndex) => (
+                    <motion.div
+                      key={movie.id}
+                      initial={{ opacity: 0, x: -20 }}
+                      animate={{ opacity: 1, x: 0 }}
+                      exit={{ opacity: 0, x: 20 }}
+                      transition={{ delay: movieIndex * 0.1 }}
+                      className="bg-background border rounded p-2"
+                    >
+                      <div className="flex gap-2">
+                        {movie.posterUrl && (
+                          <img 
+                            src={movie.posterUrl} 
+                            alt={movie.name}
+                            className="w-10 h-14 object-cover rounded"
+                          />
+                        )}
+                        <div className="flex-1 min-w-0">
+                          <div className="font-medium text-xs truncate">{movie.name}</div>
+                          <div className="text-xs text-muted-foreground truncate">{movie.id}</div>
+                          <div className="text-xs font-bold text-yellow-500">⭐ {movie.rating}</div>
+                        </div>
+                      </div>
+                    </motion.div>
+                  ))}
+                </AnimatePresence>
+              </div>
+            </motion.div>
           ))}
         </div>
       </div>
 
       {/* Metrics Footer */}
-      <div className="border-t bg-muted/50 p-4">
-        <div className="grid grid-cols-4 gap-4 text-center">
-          <div>
-            <div className="text-2xl font-bold text-primary">{metrics.items}</div>
-            <div className="text-xs text-muted-foreground">Items</div>
-          </div>
-          <div>
-            <div className="text-2xl font-bold text-primary">{metrics.capacity}</div>
-            <div className="text-xs text-muted-foreground">Capacity</div>
-          </div>
-          <div>
-            <div className="text-2xl font-bold text-primary">{metrics.loadFactor.toFixed(2)}</div>
-            <div className="text-xs text-muted-foreground">Load Factor</div>
-          </div>
-          <div>
-            <div className="text-2xl font-bold text-primary">{metrics.collisions}</div>
-            <div className="text-xs text-muted-foreground">Collisions</div>
-          </div>
+      <div className="border-t bg-muted/50 px-6 py-3 flex items-center justify-around text-sm">
+        <div>
+          <span className="text-muted-foreground">Items:</span>
+          <span className="ml-2 font-bold">{totalItems}</span>
+        </div>
+        <div>
+          <span className="text-muted-foreground">Capacity:</span>
+          <span className="ml-2 font-bold">{progressiveBuckets.length}</span>
+        </div>
+        <div>
+          <span className="text-muted-foreground">Load Factor:</span>
+          <span className="ml-2 font-bold">{loadFactor}</span>
+        </div>
+        <div>
+          <span className="text-muted-foreground">Collisions:</span>
+          <span className="ml-2 font-bold text-red-500">{collisions}</span>
         </div>
       </div>
     </div>

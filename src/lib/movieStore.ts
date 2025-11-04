@@ -1,10 +1,12 @@
 import { Movie, HashTable, AVLTree, VisualizationEvent } from './dataStructures';
+import { OperationMetadata } from './visualizationEngine';
 
 export class MovieStore {
   private hashTable: HashTable;
   private avlTree: AVLTree;
   private eventQueue: VisualizationEvent[] = [];
-  private eventListeners: ((events: VisualizationEvent[]) => void)[] = [];
+  private eventListeners: ((events: VisualizationEvent[], operation?: OperationMetadata) => void)[] = [];
+  private currentOperation?: OperationMetadata;
 
   constructor() {
     this.hashTable = new HashTable();
@@ -22,12 +24,14 @@ export class MovieStore {
   private flushEvents() {
     if (this.eventQueue.length > 0) {
       const events = [...this.eventQueue];
+      const operation = this.currentOperation;
       this.eventQueue = [];
-      this.eventListeners.forEach(listener => listener(events));
+      this.currentOperation = undefined;
+      this.eventListeners.forEach(listener => listener(events, operation));
     }
   }
 
-  onEvents(listener: (events: VisualizationEvent[]) => void) {
+  onEvents(listener: (events: VisualizationEvent[], operation?: OperationMetadata) => void) {
     this.eventListeners.push(listener);
   }
 
@@ -35,6 +39,14 @@ export class MovieStore {
     // Check if updating (rating change requires AVL update)
     const existing = await this.hashTable.search(movie.id);
     const isRatingChange = existing && existing.rating !== movie.rating;
+
+    this.currentOperation = {
+      type: isRatingChange ? 'UPDATE' : 'ADD',
+      movieId: movie.id,
+      movieName: movie.name,
+      timestamp: Date.now(),
+      eventsCount: 0
+    };
 
     if (isRatingChange) {
       // Delete old rating from AVL, then insert new
@@ -44,18 +56,47 @@ export class MovieStore {
     await this.hashTable.insert(movie);
     await this.avlTree.insert(movie);
 
+    if (this.currentOperation) {
+      this.currentOperation.eventsCount = this.eventQueue.length;
+    }
+
     this.flushEvents();
     this.persist();
   }
 
   async searchMovie(id: string): Promise<Movie | null> {
+    this.currentOperation = {
+      type: 'SEARCH',
+      movieId: id,
+      timestamp: Date.now(),
+      eventsCount: 0
+    };
+
     const result = await this.hashTable.search(id);
+
+    if (this.currentOperation) {
+      this.currentOperation.eventsCount = this.eventQueue.length;
+      this.currentOperation.movieName = result?.name;
+    }
+
     this.flushEvents();
     return result;
   }
 
   async topRated(k: number): Promise<Movie[]> {
+    this.currentOperation = {
+      type: 'TOP_K',
+      timestamp: Date.now(),
+      eventsCount: 0
+    };
+
     const result = await this.avlTree.topRated(k);
+
+    if (this.currentOperation) {
+      this.currentOperation.eventsCount = this.eventQueue.length;
+      this.currentOperation.movieName = `Top ${k} Movies`;
+    }
+
     this.flushEvents();
     return result;
   }
