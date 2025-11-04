@@ -6,20 +6,148 @@ import { Play, Info, ChevronRight } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import heroImage from "@/assets/hero-placeholder.jpg";
 
-// Sample movies for demo
+// Sample movies for demo with poster images
 const sampleMovies: Movie[] = [
-  { id: "tt0111161", name: "The Shawshank Redemption", rating: 9.3, year: 1994 },
-  { id: "tt0068646", name: "The Godfather", rating: 9.2, year: 1972 },
-  { id: "tt0468569", name: "The Dark Knight", rating: 9.0, year: 2008 },
-  { id: "tt0071562", name: "The Godfather Part II", rating: 9.0, year: 1974 },
-  { id: "tt0050083", name: "12 Angry Men", rating: 9.0, year: 1957 },
-  { id: "tt0108052", name: "Schindler's List", rating: 8.9, year: 1993 },
-  { id: "tt0167260", name: "The Lord of the Rings: Return of the King", rating: 8.9, year: 2003 },
-  { id: "tt0110912", name: "Pulp Fiction", rating: 8.8, year: 1994 },
-  { id: "tt0060196", name: "The Good, the Bad and the Ugly", rating: 8.8, year: 1966 },
-  { id: "tt0120737", name: "The Lord of the Rings: Fellowship of the Ring", rating: 8.8, year: 2001 },
-  { id: "tt0109830", name: "Forrest Gump", rating: 8.8, year: 1994 },
-  { id: "tt0137523", name: "Fight Club", rating: 8.7, year: 1999 },
+  { 
+    id: "tt0111161", 
+    name: "The Shawshank Redemption", 
+    rating: 9.3, 
+    year: 1994,
+    posterUrl: "https://m.media-amazon.com/images/M/MV5BMDAyY2FhYjctNDc5OS00MDNlLWJiZjgtYTgxN2NhZDY3NmM3XkEyXkFqcGc@._V1_SX300.jpg"
+  },
+  { 
+    id: "tt0068646", 
+    name: "The Godfather", 
+    rating: 9.2, 
+    year: 1972,
+    posterUrl: "https://m.media-amazon.com/images/M/MV5BYTJkNGQyZDgtZDQ0NC00MDM0LWEzZWQtYzUzZDEwMDljZWNjXkEyXkFqcGc@._V1_SX300.jpg"
+  },
+  { 
+    id: "tt0468569", 
+    name: "The Dark Knight", 
+    rating: 9.0, 
+    year: 2008,
+    posterUrl: "https://m.media-amazon.com/images/M/MV5BMTMxNTMwODM0NF5BMl5BanBnXkFtZTcwODAyMTk2Mw@@._V1_SX300.jpg"
+  },
+  { 
+    id: "tt0071562", 
+    name: "The Godfather Part II", 
+    rating: 9.0, 
+    year: 1974,
+    posterUrl: "https://m.media-amazon.com/images/M/MV5BNzc1OWY5MjktZDllMi00ZDEzLWEwMGItYjk1YmRhYjBjNTVlXkEyXkFqcGc@._V1_SX300.jpg"
+  },
+  { 
+    id: "tt0050083", 
+    name: "12 Angry Men", 
+    rating: 9.0, 
+    year: 1957,
+    posterUrl: "https://m.media-amazon.com/images/M/MV5BYzc4Nzk1MzctY2Y5Yy00ZDI5LWFkMDEtNmMzZjI3MmFkNjk5XkEyXkFqcGc@._V1_SX300.jpg"
+  },
+  { 
+    id: "tt0108052", 
+    name: "Schindler's List", 
+    rating: 8.9, 
+    year: 1993,
+    posterUrl: "https://m.media-amazon.com/images/M/MV5BNjM1ZDQxYWUtMzQyZS00MTE1LWJmZGYtNGJmMDQzYmVjOTNjXkEyXkFqcGc@._V1_SX300.jpg"
+  },
+  { 
+    id: "tt0167260", 
+    name: "The Lord of the Rings: Return of the King", 
+    rating: 8.9, 
+    year: 2003,
+    posterUrl: "https://m.media-amazon.com/images/M/MV5BMTZkMjBjNWMtZGI5OC00MGU0LTk4ZTItODg2NWM3NTVmNWQ4XkEyXkFqcGc@._V1_SX300.jpg"
+  },
+  { 
+    id: "tt0110912", 
+    name: "Pulp Fiction", 
+    rating: 8.8, 
+    year: 1994,
+    posterUrl: "https://m.media-amazon.com/images/M/MV5BYTViYTE3ZGQtNDBlMC00ZTAyLTkyODMtZGRiZDg0MjA2YThkXkEyXkFqcGc@._V1_SX300.jpg"
+  },
+  { 
+    id: "tt0060196", 
+    name: "The Good, the Bad and the Ugly", 
+    rating: 8.8, 
+    year: 1966,
+    posterUrl: "https://m.media-amazon.com/images/M/MV5BYmZiOWFiOTYtMjdlOS00NGQ1LTgyNmUtMjBmNjA1ODFiM2QxXkEyXkFqcGc@._V1_SX300.jpg"
+  },
+  { 
+    id: "tt0120737", 
+    name: "The Lord of the Rings: Fellowship of the Ring", 
+    rating: 8.8, 
+    year: 2001,
+    posterUrl: "https://m.media-amazon.com/images/M/MV5BNzIxMDQ2YTctNDY4MC00ZTRhLTk4ODQtMTVlOWY4NTdiYmMwXkEyXkFqcGc@._V1_SX300.jpg"
+  },
+  { 
+    id: "tt0109830", 
+    name: "Forrest Gump", 
+    rating: 8.8, 
+    year: 1994,
+    posterUrl: "https://m.media-amazon.com/images/M/MV5BNDYwNzVjMTItZmU5YS00YjQ5LTljYjgtMjY2NDVmYWMyNWFmXkEyXkFqcGc@._V1_SX300.jpg"
+  },
+  { 
+    id: "tt0137523", 
+    name: "Fight Club", 
+    rating: 8.7, 
+    year: 1999,
+    posterUrl: "https://m.media-amazon.com/images/M/MV5BOTgyOGQ1NDItNGU3Ny00MjU3LTg2YWEtNmEyYjBiMjI1Y2M5XkEyXkFqcGc@._V1_SX300.jpg"
+  },
+  { 
+    id: "tt0167261", 
+    name: "The Lord of the Rings: The Two Towers", 
+    rating: 8.8, 
+    year: 2002,
+    posterUrl: "https://m.media-amazon.com/images/M/MV5BNzM0NzQxOTQtMmU4Yi00ZGQ1LThlMzItZmFiYzlhYzI0OTRkXkEyXkFqcGc@._V1_SX300.jpg"
+  },
+  { 
+    id: "tt0080684", 
+    name: "Star Wars: Episode V - The Empire Strikes Back", 
+    rating: 8.7, 
+    year: 1980,
+    posterUrl: "https://m.media-amazon.com/images/M/MV5BMTkxNGFlNDktZmJkNC00MDdhLTg0MTEtZjZiYWI3MGE5NWIwXkEyXkFqcGc@._V1_SX300.jpg"
+  },
+  { 
+    id: "tt0099685", 
+    name: "Goodfellas", 
+    rating: 8.7, 
+    year: 1990,
+    posterUrl: "https://m.media-amazon.com/images/M/MV5BY2NkZjEzMDgtN2RjYy00YzM1LWI4ZmQtMjIwYjFjNmI3ZGEwXkEyXkFqcGc@._V1_SX300.jpg"
+  },
+  { 
+    id: "tt0133093", 
+    name: "The Matrix", 
+    rating: 8.7, 
+    year: 1999,
+    posterUrl: "https://m.media-amazon.com/images/M/MV5BN2NmN2VhMTQtMDNiOS00NDlhLTliMjgtODE2ZTY0ODQyNDRhXkEyXkFqcGc@._V1_SX300.jpg"
+  },
+  { 
+    id: "tt0076759", 
+    name: "Star Wars: Episode IV - A New Hope", 
+    rating: 8.6, 
+    year: 1977,
+    posterUrl: "https://m.media-amazon.com/images/M/MV5BOTA5NjhiOTAtZWM0ZC00MWNhLThiMzEtZDFkOTk2OTU1ZDJkXkEyXkFqcGc@._V1_SX300.jpg"
+  },
+  { 
+    id: "tt0114369", 
+    name: "Se7en", 
+    rating: 8.6, 
+    year: 1995,
+    posterUrl: "https://m.media-amazon.com/images/M/MV5BY2IzNzMwMGMtNmVhNS00OTQxLWE1M2UtZGRjMjU5NTgwYTJkXkEyXkFqcGc@._V1_SX300.jpg"
+  },
+  { 
+    id: "tt0102926", 
+    name: "The Silence of the Lambs", 
+    rating: 8.6, 
+    year: 1991,
+    posterUrl: "https://m.media-amazon.com/images/M/MV5BYjcxMTU1ZjgtYmY1NC00MjEzLWJhZjItZDNmYjkxYTJjNTU1XkEyXkFqcGc@._V1_SX300.jpg"
+  },
+  { 
+    id: "tt0038650", 
+    name: "It's a Wonderful Life", 
+    rating: 8.6, 
+    year: 1946,
+    posterUrl: "https://m.media-amazon.com/images/M/MV5BYjkyNzJkNzMtZjdkMS00M2MyLWE0MzUtMGQ3YjIwNjFmNjg5XkEyXkFqcGc@._V1_SX300.jpg"
+  },
 ];
 
 export default function Home() {
@@ -29,24 +157,42 @@ export default function Home() {
 
   useEffect(() => {
     const loadMovies = async () => {
+      console.log('Loading movies...');
       await movieStore.loadFromStorage();
       let allMovies = movieStore.getAllMovies();
+      console.log('Movies from storage:', allMovies.length);
 
-      // Load sample movies if empty
-      if (allMovies.length === 0) {
+      // Check if we need to load sample movies (empty or old format without posters)
+      const needsSampleData = allMovies.length === 0 || 
+        allMovies.every(movie => !movie.posterUrl);
+
+      console.log('Needs sample data?', needsSampleData);
+
+      if (needsSampleData) {
+        // Clear old data if it exists
+        if (allMovies.length > 0) {
+          console.log('Clearing old movies without posters');
+          localStorage.removeItem('movies');
+        }
+        
+        console.log('Loading sample movies:', sampleMovies.length);
+        // Load sample movies with poster URLs
         for (const movie of sampleMovies) {
           await movieStore.addMovie(movie);
         }
         allMovies = movieStore.getAllMovies();
+        console.log('After loading samples:', allMovies.length);
       }
 
       setMovies(allMovies);
 
       const top = await movieStore.topRated(10);
       setTopRated(top);
+      console.log('Top rated movies:', top.length);
 
       if (top.length > 0) {
         setHero(top[0]);
+        console.log('Hero set to:', top[0].name);
       }
     };
 
