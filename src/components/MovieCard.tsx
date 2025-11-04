@@ -1,6 +1,8 @@
 import { Movie } from "@/lib/dataStructures";
 import { Play, Info, Heart } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { useState } from "react";
+import { MovieDetailsModal } from "./MovieDetailsModal";
 
 interface MovieCardProps {
   movie: Movie;
@@ -9,13 +11,22 @@ interface MovieCardProps {
 }
 
 export const MovieCard = ({ movie, onDetails, className }: MovieCardProps) => {
+  const [showDetails, setShowDetails] = useState(false);
+
   return (
-    <div
+    <>
+      <div
       className={cn(
         "group relative aspect-[2/3] rounded-md overflow-hidden bg-muted cursor-pointer transition-all duration-300 hover:scale-105 hover:z-10 hover:shadow-2xl",
         className
       )}
-      onClick={onDetails}
+      onClick={() => {
+        if (onDetails) {
+          onDetails();
+        } else {
+          setShowDetails(true);
+        }
+      }}
     >
       {movie.posterUrl ? (
         <img
@@ -76,5 +87,12 @@ export const MovieCard = ({ movie, onDetails, className }: MovieCardProps) => {
         </div>
       </div>
     </div>
+    
+    <MovieDetailsModal
+      movie={movie}
+      open={showDetails}
+      onOpenChange={setShowDetails}
+    />
+    </>
   );
 };

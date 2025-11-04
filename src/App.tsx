@@ -6,6 +6,9 @@ import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { NavigationRail } from "@/components/NavigationRail";
 import Home from "./pages/Home";
 import AddMovie from "./pages/AddMovie";
+import Search from "./pages/Search";
+import MyList from "./pages/MyList";
+import Visualizer from "./pages/Visualizer";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -22,9 +25,9 @@ const App = () => (
             <Routes>
               <Route path="/" element={<Home />} />
               <Route path="/add" element={<AddMovie />} />
-              <Route path="/search" element={<div className="p-16 text-2xl">Search (Coming Soon)</div>} />
-              <Route path="/my-list" element={<div className="p-16 text-2xl">My List (Coming Soon)</div>} />
-              <Route path="/visualizer" element={<div className="p-16 text-2xl">Visualizer (Coming Soon)</div>} />
+              <Route path="/search" element={<Search />} />
+              <Route path="/my-list" element={<MyList />} />
+              <Route path="/visualizer" element={<Visualizer />} />
               <Route path="*" element={<NotFound />} />
             </Routes>
           </main>

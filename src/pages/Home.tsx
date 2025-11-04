@@ -115,23 +115,48 @@ export default function Home() {
       )}
 
       {/* Carousels */}
-      <div className="space-y-8 px-16 py-12">
+      <div className="space-y-12 px-16 py-12">
         {/* Top Rated */}
         {topRated.length > 0 && (
           <section>
             <div className="flex items-center justify-between mb-4">
-              <h2 className="text-2xl font-bold">Top Rated</h2>
-              <button className="flex items-center gap-1 text-sm text-muted-foreground hover:text-foreground transition-colors">
-                Explore All
+              <h2 className="text-2xl font-bold">Top Rated on IMDb</h2>
+              <button 
+                onClick={() => window.location.href = '/visualizer'}
+                className="flex items-center gap-1 text-sm text-muted-foreground hover:text-primary transition-colors"
+              >
+                View in Visualizer
                 <ChevronRight className="w-4 h-4" />
               </button>
             </div>
             <div className="relative group">
               <div
                 id="top-rated-carousel"
-                className="flex gap-3 overflow-x-auto scrollbar-hide scroll-smooth snap-x snap-mandatory"
+                className="flex gap-3 overflow-x-auto scrollbar-hide scroll-smooth snap-x snap-mandatory pb-2"
               >
                 {topRated.map((movie) => (
+                  <div key={movie.id} className="flex-none w-48 snap-start">
+                    <MovieCard movie={movie} />
+                  </div>
+                ))}
+              </div>
+            </div>
+          </section>
+        )}
+
+        {/* Recently Added */}
+        {movies.length > 0 && (
+          <section>
+            <div className="flex items-center justify-between mb-4">
+              <h2 className="text-2xl font-bold">Recently Added</h2>
+              <button className="flex items-center gap-1 text-sm text-muted-foreground hover:text-primary transition-colors">
+                Explore All
+                <ChevronRight className="w-4 h-4" />
+              </button>
+            </div>
+            <div className="relative group">
+              <div className="flex gap-3 overflow-x-auto scrollbar-hide scroll-smooth snap-x snap-mandatory pb-2">
+                {movies.slice(0, 12).reverse().map((movie) => (
                   <div key={movie.id} className="flex-none w-48 snap-start">
                     <MovieCard movie={movie} />
                   </div>

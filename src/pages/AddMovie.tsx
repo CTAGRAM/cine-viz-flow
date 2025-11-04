@@ -1,5 +1,5 @@
-import { useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useState, useEffect } from "react";
+import { useNavigate, useSearchParams } from "react-router-dom";
 import { movieStore } from "@/lib/movieStore";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -9,6 +9,9 @@ import { ArrowLeft } from "lucide-react";
 
 export default function AddMovie() {
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
+  const editId = searchParams.get("id");
+  
   const [formData, setFormData] = useState({
     id: "",
     name: "",
@@ -16,6 +19,24 @@ export default function AddMovie() {
     posterUrl: "",
     year: "",
   });
+
+  useEffect(() => {
+    if (editId) {
+      const loadMovie = async () => {
+        const movie = await movieStore.searchMovie(editId);
+        if (movie) {
+          setFormData({
+            id: movie.id,
+            name: movie.name,
+            rating: movie.rating.toString(),
+            posterUrl: movie.posterUrl || "",
+            year: movie.year?.toString() || "",
+          });
+        }
+      };
+      loadMovie();
+    }
+  }, [editId]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -39,8 +60,8 @@ export default function AddMovie() {
       year: formData.year ? parseInt(formData.year) : undefined,
     });
 
-    toast.success("Movie added successfully!");
-    navigate("/");
+    toast.success(editId ? "Movie updated successfully!" : "Movie added successfully!");
+    navigate("/visualizer");
   };
 
   return (
@@ -57,9 +78,9 @@ export default function AddMovie() {
 
         <div className="space-y-6">
           <div>
-            <h1 className="text-4xl font-bold mb-2">Add Movie</h1>
+            <h1 className="text-4xl font-bold mb-2">{editId ? "Edit Movie" : "Add Movie"}</h1>
             <p className="text-muted-foreground">
-              Add a new movie to your catalog and watch the data structures update in real-time
+              {editId ? "Update movie details and watch structures rebalance" : "Add a new movie to your catalog and watch the data structures update in real-time"}
             </p>
           </div>
 
@@ -72,6 +93,7 @@ export default function AddMovie() {
                 onChange={(e) => setFormData({ ...formData, id: e.target.value })}
                 placeholder="e.g., tt1234567"
                 className="font-mono"
+                disabled={!!editId}
                 required
               />
               <p className="text-xs text-muted-foreground">Unique identifier for the movie</p>
@@ -130,7 +152,7 @@ export default function AddMovie() {
 
             <div className="flex gap-3 pt-4">
               <Button type="submit" size="lg" className="flex-1">
-                Add Movie
+                {editId ? "Update Movie" : "Add Movie"}
               </Button>
               <Button
                 type="button"
