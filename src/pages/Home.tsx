@@ -35,14 +35,14 @@ const sampleMovies: Movie[] = [
     name: "Baahubali 2: The Conclusion", 
     rating: 8.2, 
     year: 2017,
-    posterUrl: "https://m.media-amazon.com/images/M/MV5BYTJlYmY2OGQtNDZmMi00MmQwLWI1Y2UtYjk3ZWU1YWYzNmM5XkEyXkFqcGdeQXVyNjQ2MjQ5NzM@._V1_SX300.jpg"
+    posterUrl: "https://m.media-amazon.com/images/M/MV5BY2VmYjZkOTItOWYzZC00NWEwLTliYzgtNDk0MjNmNTRlNzVjXkEyXkFqcGdeQXVyODE5NzE3OTE@._V1_SX300.jpg"
   },
   { 
     id: "tt0986264", 
     name: "Taare Zameen Par", 
     rating: 8.3, 
     year: 2007,
-    posterUrl: "https://m.media-amazon.com/images/M/MV5BMDhjZWViN2MtNzgxOS00NmI4LThiZDQtZDI3MzM4MDE4NTJmXkEyXkFqcGdeQXVyMTMxODk2OTU@._V1_SX300.jpg"
+    posterUrl: "https://m.media-amazon.com/images/M/MV5BNTVkMTFiZWItOTI0Zi00ZjYwLTgyNzctMTE1NDdjMDgwMDgxXkEyXkFqcGdeQXVyODE5NzE3OTE@._V1_SX300.jpg"
   },
   { 
     id: "tt0169102", 
@@ -57,6 +57,7 @@ export default function Home() {
   const [movies, setMovies] = useState<Movie[]>([]);
   const [topRated, setTopRated] = useState<Movie[]>([]);
   const [hero, setHero] = useState<Movie | null>(null);
+  const [currentHeroIndex, setCurrentHeroIndex] = useState(0);
 
   useEffect(() => {
     const loadMovies = async () => {
@@ -109,6 +110,24 @@ export default function Home() {
     loadMovies();
   }, []);
 
+  // Auto-rotate hero slideshow every 5 seconds
+  useEffect(() => {
+    if (topRated.length > 1) {
+      const interval = setInterval(() => {
+        setCurrentHeroIndex((prev) => (prev + 1) % Math.min(topRated.length, 6));
+      }, 5000);
+
+      return () => clearInterval(interval);
+    }
+  }, [topRated.length]);
+
+  // Update hero when index changes
+  useEffect(() => {
+    if (topRated.length > 0) {
+      setHero(topRated[currentHeroIndex]);
+    }
+  }, [currentHeroIndex, topRated]);
+
   const scrollContainer = (direction: 'left' | 'right', containerId: string) => {
     const container = document.getElementById(containerId);
     if (container) {
@@ -122,48 +141,68 @@ export default function Home() {
       {/* Hero Section */}
       {hero && (
         <div className="relative h-[70vh] w-full overflow-hidden">
-          {/* Background */}
+          {/* Background with poster */}
           <div className="absolute inset-0">
             <img
-              src={heroImage}
+              key={hero.id}
+              src={hero.posterUrl || heroImage}
               alt={hero.name}
-              className="w-full h-full object-cover"
+              className="w-full h-full object-cover animate-fade-in"
             />
             <div className="absolute inset-0 bg-gradient-to-r from-background via-background/60 to-transparent" />
             <div className="absolute inset-0 bg-gradient-to-t from-background via-transparent to-transparent" />
           </div>
 
           {/* Content */}
-          <div className="relative z-10 h-full flex flex-col justify-end px-16 pb-24 max-w-2xl">
-            <div className="space-y-4 animate-slide-up">
-              <div className="flex items-center gap-2 text-sm">
-                <div className="px-2 py-1 bg-primary rounded">N</div>
-                <span className="text-muted-foreground">SERIES</span>
-              </div>
+          <div className="relative z-10 h-full flex flex-col justify-between px-16 py-8">
+            {/* Top carousel indicators */}
+            <div className="flex justify-center gap-2">
+              {topRated.slice(0, 6).map((movie, index) => (
+                <button
+                  key={movie.id}
+                  onClick={() => setCurrentHeroIndex(index)}
+                  className={`transition-all ${
+                    index === currentHeroIndex
+                      ? 'w-12 h-1 bg-white'
+                      : 'w-8 h-1 bg-white/50 hover:bg-white/70'
+                  }`}
+                  aria-label={`View ${movie.name}`}
+                />
+              ))}
+            </div>
 
-              <h1 className="text-6xl font-bold tracking-tight">{hero.name}</h1>
-
-              <div className="flex items-center gap-4 text-sm">
-                <div className="flex items-center gap-2">
-                  <div className="px-2 py-1 bg-yellow-500 text-black rounded font-bold">
-                    IMDb
-                  </div>
-                  <span className="font-semibold">{hero.rating}/10</span>
+            {/* Bottom content */}
+            <div className="max-w-2xl">
+              <div key={hero.id} className="space-y-4 animate-slide-up">
+                <div className="flex items-center gap-2 text-sm">
+                  <div className="px-2 py-1 bg-primary rounded">N</div>
+                  <span className="text-muted-foreground">FEATURED</span>
                 </div>
-                {hero.year && (
-                  <span className="text-muted-foreground">{hero.year}</span>
-                )}
-              </div>
 
-              <div className="flex gap-3 pt-4">
-                <Button size="lg" className="gap-2 bg-primary hover:bg-primary/90 text-primary-foreground px-8">
-                  <Play className="w-5 h-5 fill-current" />
-                  Play
-                </Button>
-                <Button size="lg" variant="secondary" className="gap-2 bg-white/20 hover:bg-white/30 text-white backdrop-blur-sm">
-                  <Info className="w-5 h-5" />
-                  More Info
-                </Button>
+                <h1 className="text-6xl font-bold tracking-tight">{hero.name}</h1>
+
+                <div className="flex items-center gap-4 text-sm">
+                  <div className="flex items-center gap-2">
+                    <div className="px-2 py-1 bg-yellow-500 text-black rounded font-bold">
+                      IMDb
+                    </div>
+                    <span className="font-semibold">{hero.rating}/10</span>
+                  </div>
+                  {hero.year && (
+                    <span className="text-muted-foreground">{hero.year}</span>
+                  )}
+                </div>
+
+                <div className="flex gap-3 pt-4">
+                  <Button size="lg" className="gap-2 bg-primary hover:bg-primary/90 text-primary-foreground px-8">
+                    <Play className="w-5 h-5 fill-current" />
+                    Play
+                  </Button>
+                  <Button size="lg" variant="secondary" className="gap-2 bg-white/20 hover:bg-white/30 text-white backdrop-blur-sm">
+                    <Info className="w-5 h-5" />
+                    More Info
+                  </Button>
+                </div>
               </div>
             </div>
           </div>
