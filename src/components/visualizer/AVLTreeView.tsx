@@ -1,6 +1,10 @@
 import { VisualizationEvent } from '@/lib/dataStructures';
 import { useEffect, useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
+import { TransformWrapper, TransformComponent } from 'react-zoom-pan-pinch';
+import { ZoomIn, ZoomOut, Maximize2, RotateCcw, Info } from 'lucide-react';
+import { Button } from '@/components/ui/button';
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 
 interface TreeNode {
   movie: {
@@ -250,7 +254,7 @@ export function AVLTreeView({ events, root }: AVLTreeViewProps) {
   const rotationCount = events.filter(e => e.type === 'avl-rotate').length;
 
   return (
-    <div className="flex-1 flex flex-col overflow-hidden relative">
+    <div className="flex-1 flex flex-col overflow-hidden bg-gradient-to-br from-background to-muted/30">
       {/* Narration */}
       <AnimatePresence mode="wait">
         {narration && (
@@ -259,9 +263,19 @@ export function AVLTreeView({ events, root }: AVLTreeViewProps) {
             initial={{ opacity: 0, y: -10 }}
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: -10 }}
-            className="bg-primary/10 text-primary px-6 py-3 text-center font-medium border-b"
+            className="bg-primary/10 text-primary px-6 py-3 text-center font-medium border-b flex items-center justify-center gap-2"
           >
             {narration}
+            <TooltipProvider>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <Info className="h-4 w-4 text-muted-foreground cursor-help" />
+                </TooltipTrigger>
+                <TooltipContent className="max-w-xs">
+                  <p className="text-sm">This tree automatically keeps movies sorted by rating and stays balanced for fast lookups.</p>
+                </TooltipContent>
+              </Tooltip>
+            </TooltipProvider>
           </motion.div>
         )}
       </AnimatePresence>
@@ -270,27 +284,117 @@ export function AVLTreeView({ events, root }: AVLTreeViewProps) {
       <AnimatePresence>
         {rotationType && (
           <motion.div
-            initial={{ scale: 0, rotate: 0 }}
-            animate={{ scale: 1, rotate: 360 }}
-            exit={{ scale: 0, opacity: 0 }}
-            transition={{ duration: 1 }}
-            className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 z-10"
+            initial={{ scale: 0.8, opacity: 0 }}
+            animate={{ scale: 1, opacity: 1 }}
+            exit={{ scale: 0.8, opacity: 0 }}
+            className="absolute top-20 right-6 z-10 bg-yellow-500 text-black px-4 py-2 rounded-lg shadow-lg font-bold"
           >
-            <div className="bg-card border-4 border-yellow-500 rounded-full p-8 shadow-2xl">
-              <div className="text-4xl">🔄</div>
-              <div className="text-xl font-bold text-yellow-500 mt-2">{rotationType}</div>
-              <div className="text-sm text-muted-foreground">Rotation</div>
-            </div>
+            🔄 Rebalancing tree...
           </motion.div>
         )}
       </AnimatePresence>
 
-      {/* Tree Canvas */}
-      <div className="flex-1 overflow-auto">
+      {/* Tree Canvas with Zoom/Pan Controls */}
+      <div className="flex-1 overflow-hidden relative">
         {layoutRoot ? (
-          <svg width="1000" height={Math.max(600, treeHeight * 120)} className="mx-auto">
-            {renderNode(layoutRoot)}
-          </svg>
+          <TransformWrapper
+            initialScale={0.8}
+            minScale={0.3}
+            maxScale={2}
+            centerOnInit
+            wheel={{ step: 0.1 }}
+            doubleClick={{ disabled: false, mode: 'zoomIn' }}
+          >
+            {({ zoomIn, zoomOut, resetTransform, centerView }) => (
+              <>
+                {/* Zoom Controls */}
+                <div className="absolute top-4 right-4 z-10 flex flex-col gap-2">
+                  <TooltipProvider>
+                    <Tooltip>
+                      <TooltipTrigger asChild>
+                        <Button
+                          size="icon"
+                          variant="secondary"
+                          className="bg-card/80 backdrop-blur-sm shadow-lg"
+                          onClick={() => zoomIn()}
+                        >
+                          <ZoomIn className="h-4 w-4" />
+                        </Button>
+                      </TooltipTrigger>
+                      <TooltipContent side="left">Zoom In</TooltipContent>
+                    </Tooltip>
+                  </TooltipProvider>
+
+                  <TooltipProvider>
+                    <Tooltip>
+                      <TooltipTrigger asChild>
+                        <Button
+                          size="icon"
+                          variant="secondary"
+                          className="bg-card/80 backdrop-blur-sm shadow-lg"
+                          onClick={() => zoomOut()}
+                        >
+                          <ZoomOut className="h-4 w-4" />
+                        </Button>
+                      </TooltipTrigger>
+                      <TooltipContent side="left">Zoom Out</TooltipContent>
+                    </Tooltip>
+                  </TooltipProvider>
+
+                  <TooltipProvider>
+                    <Tooltip>
+                      <TooltipTrigger asChild>
+                        <Button
+                          size="icon"
+                          variant="secondary"
+                          className="bg-card/80 backdrop-blur-sm shadow-lg"
+                          onClick={() => centerView()}
+                        >
+                          <Maximize2 className="h-4 w-4" />
+                        </Button>
+                      </TooltipTrigger>
+                      <TooltipContent side="left">Fit to Screen</TooltipContent>
+                    </Tooltip>
+                  </TooltipProvider>
+
+                  <TooltipProvider>
+                    <Tooltip>
+                      <TooltipTrigger asChild>
+                        <Button
+                          size="icon"
+                          variant="secondary"
+                          className="bg-card/80 backdrop-blur-sm shadow-lg"
+                          onClick={() => resetTransform()}
+                        >
+                          <RotateCcw className="h-4 w-4" />
+                        </Button>
+                      </TooltipTrigger>
+                      <TooltipContent side="left">Reset View</TooltipContent>
+                    </Tooltip>
+                  </TooltipProvider>
+                </div>
+
+                {/* Zoomable/Pannable SVG */}
+                <TransformComponent
+                  wrapperClass="!w-full !h-full"
+                  contentClass="!w-full !h-full flex items-center justify-center"
+                >
+                  <svg
+                    className="w-[1200px] h-[800px]"
+                    viewBox="0 0 1200 800"
+                    preserveAspectRatio="xMidYMid meet"
+                  >
+                    {renderNode(layoutRoot)}
+                  </svg>
+                </TransformComponent>
+
+                {/* Instructions overlay */}
+                <div className="absolute bottom-4 left-1/2 transform -translate-x-1/2 bg-card/90 backdrop-blur-sm px-4 py-2 rounded-lg shadow-lg text-xs text-muted-foreground">
+                  💡 Scroll to zoom • Drag to pan • Double-click to zoom in
+                </div>
+              </>
+            )}
+          </TransformWrapper>
         ) : (
           <div className="flex items-center justify-center h-full text-center p-8">
             <div className="space-y-2">

@@ -33,11 +33,11 @@ export function OperationBanner({ operation, progress, currentStep, totalSteps }
 
   const getLabel = () => {
     switch (operation.type) {
-      case 'ADD': return 'Adding Movie';
-      case 'SEARCH': return 'Searching Movie';
-      case 'UPDATE': return 'Updating Movie';
-      case 'DELETE': return 'Deleting Movie';
-      case 'TOP_K': return 'Finding Top Rated';
+      case 'ADD': return operation.movieName ? `Adding "${operation.movieName}"` : 'Adding Movie';
+      case 'SEARCH': return operation.movieName ? `Searching for "${operation.movieName}"` : 'Searching Movie';
+      case 'UPDATE': return operation.movieName ? `Updating "${operation.movieName}"` : 'Updating Movie';
+      case 'DELETE': return operation.movieName ? `Removing "${operation.movieName}"` : 'Deleting Movie';
+      case 'TOP_K': return 'Finding Top Rated Movies';
     }
   };
 
@@ -49,21 +49,14 @@ export function OperationBanner({ operation, progress, currentStep, totalSteps }
     >
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-4">
-          <div className={`${getColor()} text-white p-2 rounded-lg`}>
+          <div className={`${getColor()} text-white p-2 rounded-lg shadow-lg`}>
             {getIcon()}
           </div>
           <div>
-            <div className="flex items-center gap-2">
-              <h2 className="text-lg font-bold">{getLabel()}</h2>
-              <Badge variant="outline" className="font-mono">
-                {operation.type}
-              </Badge>
-            </div>
-            {operation.movieName && (
-              <p className="text-sm text-muted-foreground">
-                {operation.movieName} {operation.movieId && `(${operation.movieId})`}
-              </p>
-            )}
+            <h2 className="text-lg font-bold">{getLabel()}</h2>
+            <p className="text-xs text-muted-foreground mt-0.5">
+              Watch how the data structures work in real-time
+            </p>
           </div>
         </div>
 

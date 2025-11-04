@@ -1,7 +1,8 @@
 import { VisualizationEvent, Movie } from '@/lib/dataStructures';
 import { useEffect, useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Hash } from 'lucide-react';
+import { Hash, ArrowRight, Info } from 'lucide-react';
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 
 interface HashTableViewProps {
   events: VisualizationEvent[];
@@ -45,33 +46,33 @@ export function HashTableView({ events, buckets }: HashTableViewProps) {
 
     setProgressiveBuckets(tempBuckets);
 
-    // Set narration and highlights based on current event
+    // Set narration and highlights based on current event (plain English)
     switch (lastEvent.type) {
       case 'hash-probe':
         setHighlightedBucket(lastEvent.bucket);
-        setNarration(`Calculating hash for "${lastEvent.movieId}"...`);
+        setNarration(`Finding the right box for this movie...`);
         setHashCalculation({ movieId: lastEvent.movieId, bucket: lastEvent.bucket });
         break;
       case 'hash-chain-compare':
         setHighlightedBucket(lastEvent.bucket);
-        setNarration(lastEvent.match ? `✓ Match found in bucket ${lastEvent.bucket}!` : `Comparing in chain...`);
+        setNarration(lastEvent.match ? `✓ Found it in Box ${lastEvent.bucket}!` : `Checking movies in this box...`);
         break;
       case 'hash-insert':
         setHighlightedBucket(lastEvent.bucket);
-        setNarration(`✓ Inserted "${lastEvent.movieId}" into bucket ${lastEvent.bucket}`);
+        setNarration(`✓ Movie saved in Box ${lastEvent.bucket}`);
         break;
       case 'hash-update':
         setHighlightedBucket(lastEvent.bucket);
-        setNarration(`✓ Updated "${lastEvent.movieId}" in bucket ${lastEvent.bucket}`);
+        setNarration(`✓ Movie updated in Box ${lastEvent.bucket}`);
         break;
       case 'hash-resize-start':
-        setNarration(`⚠️ Resizing hash table: ${lastEvent.oldSize} → ${lastEvent.newSize} buckets`);
+        setNarration(`📦 Growing storage: ${lastEvent.oldSize} → ${lastEvent.newSize} boxes`);
         break;
       case 'hash-rehash':
-        setNarration(`Rehashing "${lastEvent.movieId}": bucket ${lastEvent.oldBucket} → ${lastEvent.newBucket}`);
+        setNarration(`Moving movie: Box ${lastEvent.oldBucket} → Box ${lastEvent.newBucket}`);
         break;
       case 'hash-resize-complete':
-        setNarration('✓ Resize complete!');
+        setNarration('✓ Storage expanded successfully!');
         break;
       default:
         setNarration('');
@@ -89,8 +90,30 @@ export function HashTableView({ events, buckets }: HashTableViewProps) {
   const loadFactor = (totalItems / progressiveBuckets.length).toFixed(2);
   const collisions = progressiveBuckets.filter(b => b.length > 1).length;
 
+  const getBucketColor = (bucket: Movie[]) => {
+    if (bucket.length === 0) return 'border-muted bg-muted/30';
+    if (bucket.length === 1) return 'border-green-500/50 bg-green-500/5';
+    return 'border-yellow-500/50 bg-yellow-500/5';
+  };
+
   return (
     <div className="flex-1 flex flex-col overflow-hidden">
+      {/* Help Banner */}
+      <div className="bg-muted/50 px-6 py-2 text-sm text-muted-foreground border-b flex items-center justify-center gap-2">
+        <Info className="h-4 w-4" />
+        Movies are distributed across boxes using a hash function for fast lookups
+        <TooltipProvider>
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <span className="text-primary cursor-help underline">Learn more</span>
+            </TooltipTrigger>
+            <TooltipContent className="max-w-xs">
+              <p className="text-sm">The box number is calculated from the movie ID, not sequential. This ensures even distribution and quick searches.</p>
+            </TooltipContent>
+          </Tooltip>
+        </TooltipProvider>
+      </div>
+
       {/* Narration */}
       <AnimatePresence mode="wait">
         {narration && (
@@ -106,7 +129,7 @@ export function HashTableView({ events, buckets }: HashTableViewProps) {
         )}
       </AnimatePresence>
 
-      {/* Hash Calculation Display */}
+      {/* Hash Calculation Display - Visual Flow */}
       <AnimatePresence>
         {hashCalculation && (
           <motion.div
@@ -115,15 +138,48 @@ export function HashTableView({ events, buckets }: HashTableViewProps) {
             exit={{ scale: 0.8, opacity: 0 }}
             className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 z-10"
           >
-            <div className="bg-card border-2 border-primary rounded-lg p-6 shadow-2xl">
-              <div className="flex items-center gap-3 mb-3">
-                <Hash className="h-6 w-6 text-primary" />
-                <span className="font-bold text-lg">Hash Calculation</span>
+            <div className="bg-card border-2 border-primary rounded-lg p-8 shadow-2xl max-w-xl">
+              <div className="flex items-center gap-3 mb-6">
+                <Hash className="h-7 w-7 text-primary" />
+                <span className="font-bold text-xl">How it works</span>
               </div>
-              <div className="space-y-2 font-mono text-sm">
-                <div>Input: <span className="text-primary font-bold">{hashCalculation.movieId}</span></div>
-                <div className="text-muted-foreground">hash(id) % {progressiveBuckets.length}</div>
-                <div className="text-xl font-bold text-green-500">→ Bucket {hashCalculation.bucket}</div>
+              <div className="space-y-4">
+                {/* Step 1 */}
+                <div className="flex items-center gap-3">
+                  <div className="bg-primary/10 text-primary px-3 py-1 rounded font-bold">Step 1</div>
+                  <div className="flex-1">
+                    <div className="text-sm text-muted-foreground">Movie ID</div>
+                    <div className="font-mono font-bold">{hashCalculation.movieId}</div>
+                  </div>
+                </div>
+                
+                {/* Arrow */}
+                <div className="flex justify-center">
+                  <ArrowRight className="h-6 w-6 text-primary animate-pulse" />
+                </div>
+                
+                {/* Step 2 */}
+                <div className="flex items-center gap-3">
+                  <div className="bg-primary/10 text-primary px-3 py-1 rounded font-bold">Step 2</div>
+                  <div className="flex-1">
+                    <div className="text-sm text-muted-foreground">Hash Function calculates</div>
+                    <div className="font-mono text-sm">hash(id) % {progressiveBuckets.length}</div>
+                  </div>
+                </div>
+                
+                {/* Arrow */}
+                <div className="flex justify-center">
+                  <ArrowRight className="h-6 w-6 text-primary animate-pulse" />
+                </div>
+                
+                {/* Step 3 */}
+                <div className="flex items-center gap-3">
+                  <div className="bg-primary/10 text-primary px-3 py-1 rounded font-bold">Step 3</div>
+                  <div className="flex-1">
+                    <div className="text-sm text-muted-foreground">Stored in</div>
+                    <div className="text-2xl font-bold text-green-500">Box {hashCalculation.bucket}</div>
+                  </div>
+                </div>
               </div>
             </div>
           </motion.div>
@@ -140,15 +196,24 @@ export function HashTableView({ events, buckets }: HashTableViewProps) {
               animate={{
                 opacity: 1,
                 scale: highlightedBucket === index ? 1.05 : 1,
-                borderColor: highlightedBucket === index ? 'hsl(var(--primary))' : 'hsl(var(--border))'
               }}
-              className="border-2 rounded-lg bg-card overflow-hidden transition-all"
+              className={`border-2 rounded-lg overflow-hidden transition-all ${getBucketColor(bucket)} ${
+                highlightedBucket === index ? 'ring-2 ring-primary ring-offset-2' : ''
+              }`}
             >
               <div className={`px-3 py-2 text-sm font-semibold border-b flex items-center justify-between ${
                 highlightedBucket === index ? 'bg-primary text-primary-foreground' : 'bg-muted'
               }`}>
-                <span>Bucket {index}</span>
-                <span className="text-xs">{bucket.length}</span>
+                <span className="flex items-center gap-1">
+                  📦 Box {index}
+                </span>
+                <span className={`text-xs px-2 py-0.5 rounded ${
+                  bucket.length === 0 ? 'bg-muted-foreground/20' : 
+                  bucket.length === 1 ? 'bg-green-500 text-white' : 
+                  'bg-yellow-500 text-black'
+                }`}>
+                  {bucket.length}
+                </span>
               </div>
               
               <div className="p-2 space-y-2 min-h-[100px]">

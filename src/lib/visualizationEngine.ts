@@ -95,7 +95,7 @@ export class VisualizationEngine {
   private scheduleNext() {
     if (!this.state.isPlaying) return;
     
-    const baseDelay = 1000; // 1 second per event (slower for better viewing)
+    const baseDelay = 1500; // 1.5 seconds per event (slower for better comprehension)
     const delay = baseDelay / this.state.speed;
 
     this.playbackTimer = setTimeout(() => {
