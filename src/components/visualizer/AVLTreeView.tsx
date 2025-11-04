@@ -75,7 +75,10 @@ export function AVLTreeView({ events, root }: AVLTreeViewProps) {
     const rightSpacing = horizontalSpacing / 2;
     
     return {
-      ...node,
+      movie: node.movie,
+      height: node.height,
+      size: node.size,
+      balance: node.balance,
       x,
       y,
       left: layoutTree(node.left, x - leftSpacing, y + 120, leftSpacing),
