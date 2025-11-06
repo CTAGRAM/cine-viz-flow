@@ -122,7 +122,7 @@ export function BookDetailsModal({ book, open, onOpenChange, ownerId }: BookDeta
               {book.available !== undefined && (
                 <div className="flex items-center gap-2">
                   <div className={`h-2 w-2 rounded-full ${book.available ? 'bg-green-500' : 'bg-red-500'}`} />
-                  <span className="font-medium">{book.available ? 'Available' : 'Not Available'}</span>
+                  <span className="font-medium">{book.available ? 'Available' : 'Reserved'}</span>
                 </div>
               )}
             </div>
@@ -139,7 +139,7 @@ export function BookDetailsModal({ book, open, onOpenChange, ownerId }: BookDeta
 
             {/* Actions */}
             <div className="space-y-3">
-              {!isOwner && ownerId && (
+              {!isOwner && ownerId && book.available && (
                 <RequestBookDialog
                   bookId={book.id}
                   bookTitle={book.name}
@@ -149,6 +149,14 @@ export function BookDetailsModal({ book, open, onOpenChange, ownerId }: BookDeta
                     onOpenChange(false);
                   }}
                 />
+              )}
+
+              {!isOwner && ownerId && !book.available && (
+                <div className="bg-red-50 dark:bg-red-950 p-4 rounded-lg">
+                  <p className="text-sm font-semibold text-red-800 dark:text-red-200">
+                    This book is currently reserved for another exchange
+                  </p>
+                </div>
               )}
 
               {isOwner && (

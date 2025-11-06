@@ -1,4 +1,4 @@
-import { Home, Search, Plus, Heart, Layers, User, Inbox, Sparkles } from "lucide-react";
+import { Home, Search, Plus, Heart, Layers, User, Inbox, Sparkles, History } from "lucide-react";
 import { NavLink } from "react-router-dom";
 import { cn } from "@/lib/utils";
 import { useAuth } from "@/hooks/useAuth";
@@ -59,6 +59,7 @@ export const NavigationRail = () => {
     { to: "/add", icon: Plus, label: "List a Book" },
     { to: "/my-list", icon: Heart, label: "My Books" },
     { to: "/requests", icon: Inbox, label: "Requests", badge: pendingRequests },
+    { to: "/history", icon: History, label: "History" },
     { to: "/visualizer", icon: Layers, label: "Visualizer" },
   ];
 

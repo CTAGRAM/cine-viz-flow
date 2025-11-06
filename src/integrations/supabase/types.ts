@@ -130,6 +130,57 @@ export type Database = {
         }
         Relationships: []
       }
+      swaps: {
+        Row: {
+          book_id: string
+          created_at: string
+          feedback: string | null
+          from_user_id: string
+          id: string
+          rating: number | null
+          request_id: string | null
+          swap_date: string
+          to_user_id: string
+        }
+        Insert: {
+          book_id: string
+          created_at?: string
+          feedback?: string | null
+          from_user_id: string
+          id?: string
+          rating?: number | null
+          request_id?: string | null
+          swap_date?: string
+          to_user_id: string
+        }
+        Update: {
+          book_id?: string
+          created_at?: string
+          feedback?: string | null
+          from_user_id?: string
+          id?: string
+          rating?: number | null
+          request_id?: string | null
+          swap_date?: string
+          to_user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "swaps_book_id_fkey"
+            columns: ["book_id"]
+            isOneToOne: false
+            referencedRelation: "books"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "swaps_request_id_fkey"
+            columns: ["request_id"]
+            isOneToOne: false
+            referencedRelation: "book_requests"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
     }
     Views: {
       [_ in never]: never
@@ -138,6 +189,10 @@ export type Database = {
       can_request_book: {
         Args: { p_book_id: string; p_user_id: string }
         Returns: boolean
+      }
+      complete_swap: {
+        Args: { p_feedback?: string; p_rating?: number; p_request_id: string }
+        Returns: string
       }
     }
     Enums: {

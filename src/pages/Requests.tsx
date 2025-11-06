@@ -5,9 +5,10 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Badge } from '@/components/ui/badge';
+import { CompleteSwapDialog } from '@/components/CompleteSwapDialog';
 import { toast } from 'sonner';
 import { useNavigate } from 'react-router-dom';
-import { Inbox, Send, CheckCircle, XCircle, Clock, Loader2 } from 'lucide-react';
+import { Inbox, Send, CheckCircle, XCircle, Clock, Loader2, Lock } from 'lucide-react';
 
 interface BookRequest {
   id: string;
@@ -30,6 +31,12 @@ const Requests = () => {
   const [outgoingRequests, setOutgoingRequests] = useState<BookRequest[]>([]);
   const [loading, setLoading] = useState(true);
   const [actionLoading, setActionLoading] = useState<string | null>(null);
+  const [completeSwapDialog, setCompleteSwapDialog] = useState<{
+    open: boolean;
+    requestId: string;
+    bookTitle: string;
+    isRequester: boolean;
+  }>({ open: false, requestId: '', bookTitle: '', isRequester: false });
 
   useEffect(() => {
     if (!user) {
@@ -177,30 +184,14 @@ const Requests = () => {
     }
   };
 
-  const handleComplete = async (requestId: string) => {
-    setActionLoading(requestId);
-    try {
-      const { error } = await supabase
-        .from('book_requests')
-        .update({ status: 'completed' })
-        .eq('id', requestId);
-
-      if (error) throw error;
-
-      toast.success('Exchange marked as completed!');
-      fetchRequests();
-    } catch (error) {
-      console.error('Error completing request:', error);
-      toast.error('Failed to mark as completed');
-    } finally {
-      setActionLoading(null);
-    }
+  const handleComplete = () => {
+    fetchRequests();
   };
 
   const getStatusBadge = (status: string) => {
     const variants: Record<string, { variant: any; icon: any; label: string }> = {
       pending: { variant: 'outline', icon: Clock, label: 'Pending' },
-      accepted: { variant: 'default', icon: CheckCircle, label: 'Accepted' },
+      accepted: { variant: 'default', icon: Lock, label: 'Reserved' },
       rejected: { variant: 'destructive', icon: XCircle, label: 'Rejected' },
       completed: { variant: 'secondary', icon: CheckCircle, label: 'Completed' },
       cancelled: { variant: 'secondary', icon: XCircle, label: 'Cancelled' },
@@ -319,11 +310,18 @@ const Requests = () => {
                 {request.status === 'accepted' && (
                   <CardContent className="pt-0">
                     <Button
-                      onClick={() => handleComplete(request.id)}
+                      onClick={() =>
+                        setCompleteSwapDialog({
+                          open: true,
+                          requestId: request.id,
+                          bookTitle: request.book_title,
+                          isRequester: false,
+                        })
+                      }
                       disabled={actionLoading === request.id}
                       variant="secondary"
                     >
-                      Mark as Completed
+                      Complete Exchange
                     </Button>
                   </CardContent>
                 )}
@@ -401,9 +399,12 @@ const Requests = () => {
                 )}
                 {request.status === 'accepted' && (
                   <CardContent className="pt-0">
-                    <div className="bg-green-50 dark:bg-green-950 p-4 rounded-lg">
+                    <div className="bg-green-50 dark:bg-green-950 p-4 rounded-lg space-y-3">
                       <p className="text-sm font-semibold text-green-800 dark:text-green-200">
-                        ✓ Request accepted! Contact {request.owner_name} to arrange the exchange.
+                        ✓ Request reserved! Contact {request.owner_name} to arrange the exchange.
+                      </p>
+                      <p className="text-xs text-green-700 dark:text-green-300">
+                        This book is now reserved for you. Other requests have been automatically rejected.
                       </p>
                     </div>
                   </CardContent>
@@ -413,6 +414,17 @@ const Requests = () => {
           )}
         </TabsContent>
       </Tabs>
+
+      <CompleteSwapDialog
+        requestId={completeSwapDialog.requestId}
+        bookTitle={completeSwapDialog.bookTitle}
+        open={completeSwapDialog.open}
+        onOpenChange={(open) =>
+          setCompleteSwapDialog((prev) => ({ ...prev, open }))
+        }
+        onComplete={handleComplete}
+        isRequester={completeSwapDialog.isRequester}
+      />
     </div>
   );
 };

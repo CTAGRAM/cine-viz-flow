@@ -180,13 +180,25 @@ export default function Home() {
                   {hero.year && (
                     <span className="text-muted-foreground">{hero.year}</span>
                   )}
+                  {!hero.available && (
+                    <span className="px-3 py-1 bg-red-100 dark:bg-red-900/30 text-red-800 dark:text-red-200 rounded-lg font-semibold">
+                      Reserved
+                    </span>
+                  )}
                 </div>
 
                 <div className="flex gap-3 pt-4">
-                  <Button size="lg" className="gap-2 bg-primary hover:bg-primary/90 text-primary-foreground px-8">
-                  <BookOpen className="w-5 h-5" />
-                  Request Book
-                </Button>
+                  {hero.available ? (
+                    <Button size="lg" className="gap-2 bg-primary hover:bg-primary/90 text-primary-foreground px-8">
+                      <BookOpen className="w-5 h-5" />
+                      Request Book
+                    </Button>
+                  ) : (
+                    <Button size="lg" disabled className="gap-2 px-8">
+                      <BookOpen className="w-5 h-5" />
+                      Reserved
+                    </Button>
+                  )}
                   <Button size="lg" variant="secondary" className="gap-2">
                     <Info className="w-5 h-5" />
                     More Info

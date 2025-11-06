@@ -66,6 +66,11 @@ export const BookCard = ({ book, ownerId, onDetails, className }: BookCardProps)
                 {book.condition}
               </div>
             )}
+            {!book.available && (
+              <div className="px-2 py-0.5 bg-red-500 text-white rounded text-xs font-bold">
+                Reserved
+              </div>
+            )}
           </div>
 
           <div className="flex gap-2 pt-2">
