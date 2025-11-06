@@ -34,9 +34,9 @@ const AppContent = () => {
   }
 
   return (
-    <div className="flex min-h-screen w-full">
+    <div className="min-h-screen w-full">
       <NavigationRail />
-      <main className="flex-1 overflow-x-hidden">
+      <main className="ml-20 overflow-x-hidden">
         <Routes>
           <Route path="/" element={<Home />} />
           <Route path="/auth" element={<Auth />} />
