@@ -22,16 +22,24 @@ export default function Home() {
         // Fetch all books from Supabase
         const { data: booksData, error } = await supabase
           .from('books')
-          .select(`
-            *,
-            profiles:owner_user_id (full_name)
-          `)
+          .select('*')
           .order('created_at', { ascending: false });
 
         if (error) {
           console.error('Error fetching books:', error);
+          setLoading(false);
           return;
         }
+
+        // Fetch profiles separately
+        const userIds = [...new Set(booksData?.map(b => b.owner_user_id) || [])];
+        const { data: profilesData } = await supabase
+          .from('profiles')
+          .select('id, full_name')
+          .in('id', userIds);
+
+        // Create profile map
+        const profileMap = new Map(profilesData?.map(p => [p.id, p.full_name]) || []);
 
         // Convert Supabase data to Book format with owner_user_id
         const booksWithOwnerData = (booksData || []).map((book: any) => ({
@@ -44,7 +52,7 @@ export default function Home() {
             condition: book.condition,
             year: book.year,
             posterUrl: book.poster_url,
-            owner: book.profiles?.full_name || 'Unknown',
+            owner: profileMap.get(book.owner_user_id) || 'Unknown',
             available: book.available,
           },
           ownerId: book.owner_user_id,

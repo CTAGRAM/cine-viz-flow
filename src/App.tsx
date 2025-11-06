@@ -14,6 +14,7 @@ import Visualizer from "./pages/Visualizer";
 import Auth from "./pages/Auth";
 import Profile from "./pages/Profile";
 import Requests from "./pages/Requests";
+import Matches from "./pages/Matches";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -36,6 +37,7 @@ const App = () => (
                 <Route path="/search" element={<Search />} />
                 <Route path="/my-list" element={<MyList />} />
                 <Route path="/requests" element={<Requests />} />
+                <Route path="/matches" element={<Matches />} />
                 <Route path="/visualizer" element={<Visualizer />} />
                 <Route path="*" element={<NotFound />} />
               </Routes>
