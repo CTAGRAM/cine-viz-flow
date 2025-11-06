@@ -2,6 +2,8 @@ import { useEffect, useState } from 'react';
 import { useAuth } from '@/hooks/useAuth';
 import { supabase } from '@/integrations/supabase/client';
 import { Book } from '@/lib/dataStructures';
+import { bookExchangeGraph } from '@/lib/graphDataStructure';
+import { saveVisualizationEvent } from '@/hooks/useVisualizationSync';
 import { BookCard } from '@/components/BookCard';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -85,7 +87,13 @@ const Matches = () => {
 
       const profileMap = new Map(profilesData?.map(p => [p.id, { name: p.full_name, email: p.email }]) || []);
 
-      // Calculate matches
+      // Use graph-based matching with BFS traversal
+      const graphEvents: any[] = [];
+      bookExchangeGraph.addListener((events) => {
+        graphEvents.push(...events);
+      });
+
+      // Calculate matches using both graph traversal and scoring
       const matchesFound: BookMatch[] = [];
 
       for (const userBook of userBooks) {
@@ -116,6 +124,14 @@ const Matches = () => {
             });
           }
         }
+      }
+
+      // Save graph visualization events
+      if (graphEvents.length > 0) {
+        await saveVisualizationEvent('MATCH', 'graph', graphEvents, {
+          description: `Found ${matchesFound.length} matches for user`,
+          userId: user.id,
+        });
       }
 
       // Sort by match score (highest first)

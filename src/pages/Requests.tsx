@@ -1,6 +1,8 @@
 import { useEffect, useState } from 'react';
 import { useAuth } from '@/hooks/useAuth';
 import { supabase } from '@/integrations/supabase/client';
+import { requestQueue } from '@/lib/queueDataStructure';
+import { saveVisualizationEvent } from '@/hooks/useVisualizationSync';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
@@ -55,6 +57,12 @@ const Requests = () => {
     if (!user) return;
 
     try {
+      // Set up queue event listener
+      const queueEvents: any[] = [];
+      requestQueue.addListener((events) => {
+        queueEvents.push(...events);
+      });
+
       // Fetch incoming requests (requests for my books)
       const { data: incomingRequests, error: incomingError } = await supabase
         .from('book_requests')
@@ -146,6 +154,33 @@ const Requests = () => {
       }));
 
       setOutgoingRequests(formattedOutgoing);
+
+      // Populate queue with pending requests
+      requestQueue.clear();
+      const bookRequestMap = new Map<string, any[]>();
+      
+      [...formattedIncoming, ...formattedOutgoing]
+        .filter(req => req.status === 'pending')
+        .forEach(req => {
+          if (!bookRequestMap.has(req.book_id)) {
+            bookRequestMap.set(req.book_id, []);
+          }
+          bookRequestMap.get(req.book_id)!.push(req);
+        });
+
+      // Enqueue requests with multiple pending items
+      bookRequestMap.forEach((requests, bookId) => {
+        if (requests.length > 1) {
+          requests.forEach(req => {
+            requestQueue.enqueue({
+              requestId: req.id,
+              bookId: req.book_id,
+              bookTitle: req.book_title,
+              timestamp: new Date(req.created_at).getTime(),
+            }, requests.length - requests.indexOf(req));
+          });
+        }
+      });
     } catch (error: any) {
       console.error('Error fetching requests:', error);
       toast.error('Failed to load requests');
@@ -159,6 +194,17 @@ const Requests = () => {
     try {
       const request = incomingRequests.find(r => r.id === requestId);
       
+      // Process queue: dequeue accepted request
+      const queueEvents: any[] = [];
+      requestQueue.addListener((events) => {
+        queueEvents.push(...events);
+      });
+      
+      const queueItem = requestQueue.getItems().find(item => item.data.requestId === requestId);
+      if (queueItem) {
+        requestQueue.remove(queueItem.id);
+      }
+      
       const { error } = await supabase
         .from('book_requests')
         .update({ status: 'accepted' })
@@ -167,6 +213,14 @@ const Requests = () => {
       if (error) throw error;
 
       toast.success('Request accepted!');
+      
+      // Save queue visualization
+      if (queueEvents.length > 0) {
+        await saveVisualizationEvent('DELETE', 'queue', queueEvents, {
+          description: `Accepted request and removed from queue`,
+          requestId: requestId,
+        });
+      }
       
       // Send email notification
       if (request) {
@@ -195,6 +249,17 @@ const Requests = () => {
   const handleReject = async (requestId: string) => {
     setActionLoading(requestId);
     try {
+      // Process queue: dequeue rejected request
+      const queueEvents: any[] = [];
+      requestQueue.addListener((events) => {
+        queueEvents.push(...events);
+      });
+      
+      const queueItem = requestQueue.getItems().find(item => item.data.requestId === requestId);
+      if (queueItem) {
+        requestQueue.remove(queueItem.id);
+      }
+      
       const { error } = await supabase
         .from('book_requests')
         .update({ status: 'rejected' })
@@ -203,6 +268,15 @@ const Requests = () => {
       if (error) throw error;
 
       toast.success('Request rejected');
+      
+      // Save queue visualization
+      if (queueEvents.length > 0) {
+        await saveVisualizationEvent('DELETE', 'queue', queueEvents, {
+          description: `Rejected request and removed from queue`,
+          requestId: requestId,
+        });
+      }
+      
       fetchRequests();
     } catch (error) {
       console.error('Error rejecting request:', error);
