@@ -7,11 +7,12 @@ import { BookDetailsModal } from "./BookDetailsModal";
 interface BookCardProps {
   book: Book;
   ownerId?: string;
+  ownerEmail?: string;
   onDetails?: () => void;
   className?: string;
 }
 
-export const BookCard = ({ book, ownerId, onDetails, className }: BookCardProps) => {
+export const BookCard = ({ book, ownerId, ownerEmail, onDetails, className }: BookCardProps) => {
   const [showDetails, setShowDetails] = useState(false);
 
   return (
@@ -103,6 +104,7 @@ export const BookCard = ({ book, ownerId, onDetails, className }: BookCardProps)
       open={showDetails}
       onOpenChange={setShowDetails}
       ownerId={ownerId}
+      ownerEmail={ownerEmail}
     />
     </>
   );

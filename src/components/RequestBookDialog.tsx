@@ -5,6 +5,7 @@ import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
+import { sendEmailNotification } from '@/lib/emailNotifications';
 import { toast } from 'sonner';
 import { BookOpen, Loader2 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
@@ -13,10 +14,11 @@ interface RequestBookDialogProps {
   bookId: string;
   bookTitle: string;
   ownerId: string;
+  ownerEmail?: string;
   onRequestSent?: () => void;
 }
 
-export const RequestBookDialog = ({ bookId, bookTitle, ownerId, onRequestSent }: RequestBookDialogProps) => {
+export const RequestBookDialog = ({ bookId, bookTitle, ownerId, ownerEmail, onRequestSent }: RequestBookDialogProps) => {
   const { user } = useAuth();
   const navigate = useNavigate();
   const [open, setOpen] = useState(false);
@@ -61,6 +63,29 @@ export const RequestBookDialog = ({ bookId, bookTitle, ownerId, onRequestSent }:
       if (error) throw error;
 
       toast.success('Request sent successfully!');
+      
+      // Send email notification to owner
+      if (ownerEmail) {
+        // Get requester's name
+        const { data: profile } = await supabase
+          .from('profiles')
+          .select('full_name')
+          .eq('id', user.id)
+          .single();
+
+        await sendEmailNotification({
+          to: ownerEmail,
+          subject: 'New Book Request',
+          type: 'request_received',
+          data: {
+            userName: profile?.full_name || 'A student',
+            bookTitle,
+            requestId: bookId,
+            appUrl: window.location.origin,
+          },
+        });
+      }
+      
       setOpen(false);
       setMessage('');
       onRequestSent?.();

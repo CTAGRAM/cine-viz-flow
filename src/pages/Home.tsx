@@ -10,7 +10,7 @@ import heroImage from "@/assets/hero-placeholder.jpg";
 export default function Home() {
   const location = useLocation();
   const [books, setBooks] = useState<Book[]>([]);
-  const [booksWithOwner, setBooksWithOwner] = useState<{ book: Book; ownerId: string }[]>([]);
+  const [booksWithOwner, setBooksWithOwner] = useState<{ book: Book; ownerId: string; ownerEmail: string }[]>([]);
   const [topRated, setTopRated] = useState<Book[]>([]);
   const [hero, setHero] = useState<Book | null>(null);
   const [currentHeroIndex, setCurrentHeroIndex] = useState(0);
@@ -35,11 +35,11 @@ export default function Home() {
         const userIds = [...new Set(booksData?.map(b => b.owner_user_id) || [])];
         const { data: profilesData } = await supabase
           .from('profiles')
-          .select('id, full_name')
+          .select('id, full_name, email')
           .in('id', userIds);
 
         // Create profile map
-        const profileMap = new Map(profilesData?.map(p => [p.id, p.full_name]) || []);
+        const profileMap = new Map(profilesData?.map(p => [p.id, { name: p.full_name, email: p.email }]) || []);
 
         // Convert Supabase data to Book format with owner_user_id
         const booksWithOwnerData = (booksData || []).map((book: any) => ({
@@ -52,10 +52,11 @@ export default function Home() {
             condition: book.condition,
             year: book.year,
             posterUrl: book.poster_url,
-            owner: profileMap.get(book.owner_user_id) || 'Unknown',
+            owner: profileMap.get(book.owner_user_id)?.name || 'Unknown',
             available: book.available,
           },
           ownerId: book.owner_user_id,
+          ownerEmail: profileMap.get(book.owner_user_id)?.email || '',
         }));
 
         setBooksWithOwner(booksWithOwnerData);
@@ -234,7 +235,7 @@ export default function Home() {
                   const ownerData = booksWithOwner.find(b => b.book.id === book.id);
                   return (
                     <div key={book.id} className="flex-none w-48 snap-start">
-                      <BookCard book={book} ownerId={ownerData?.ownerId} />
+                      <BookCard book={book} ownerId={ownerData?.ownerId} ownerEmail={ownerData?.ownerEmail} />
                     </div>
                   );
                 })}
@@ -259,7 +260,7 @@ export default function Home() {
                   const ownerData = booksWithOwner.find(b => b.book.id === book.id);
                   return (
                     <div key={book.id} className="flex-none w-48 snap-start">
-                      <BookCard book={book} ownerId={ownerData?.ownerId} />
+                      <BookCard book={book} ownerId={ownerData?.ownerId} ownerEmail={ownerData?.ownerEmail} />
                     </div>
                   );
                 })}
@@ -277,7 +278,7 @@ export default function Home() {
             <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-3">
               {books.slice(0, 18).map((book) => {
                 const ownerData = booksWithOwner.find(b => b.book.id === book.id);
-                return <BookCard key={book.id} book={book} ownerId={ownerData?.ownerId} />;
+                return <BookCard key={book.id} book={book} ownerId={ownerData?.ownerId} ownerEmail={ownerData?.ownerEmail} />;
               })}
             </div>
           </section>

@@ -14,9 +14,10 @@ interface BookDetailsModalProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   ownerId?: string;
+  ownerEmail?: string;
 }
 
-export function BookDetailsModal({ book, open, onOpenChange, ownerId }: BookDetailsModalProps) {
+export function BookDetailsModal({ book, open, onOpenChange, ownerId, ownerEmail }: BookDetailsModalProps) {
   const navigate = useNavigate();
   const { user } = useAuth();
   const [requestCount, setRequestCount] = useState(0);
@@ -144,6 +145,7 @@ export function BookDetailsModal({ book, open, onOpenChange, ownerId }: BookDeta
                   bookId={book.id}
                   bookTitle={book.name}
                   ownerId={ownerId}
+                  ownerEmail={ownerEmail}
                   onRequestSent={() => {
                     fetchRequestCount();
                     onOpenChange(false);

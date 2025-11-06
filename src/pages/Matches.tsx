@@ -12,6 +12,7 @@ import { Sparkles, BookOpen, Loader2, TrendingUp } from 'lucide-react';
 interface BookMatch {
   book: Book;
   ownerId: string;
+  ownerEmail: string;
   matchScore: number;
   matchReasons: string[];
   yourBook: Book;
@@ -79,10 +80,10 @@ const Matches = () => {
       const userIds = [...new Set(allBooksData?.map(b => b.owner_user_id) || [])];
       const { data: profilesData } = await supabase
         .from('profiles')
-        .select('id, full_name')
+        .select('id, full_name, email')
         .in('id', userIds);
 
-      const profileMap = new Map(profilesData?.map(p => [p.id, p.full_name]) || []);
+      const profileMap = new Map(profilesData?.map(p => [p.id, { name: p.full_name, email: p.email }]) || []);
 
       // Calculate matches
       const matchesFound: BookMatch[] = [];
@@ -98,7 +99,7 @@ const Matches = () => {
             condition: otherBookData.condition,
             year: otherBookData.year,
             posterUrl: otherBookData.poster_url,
-            owner: profileMap.get(otherBookData.owner_user_id) || 'Unknown',
+            owner: profileMap.get(otherBookData.owner_user_id)?.name || 'Unknown',
             available: otherBookData.available,
           };
 
@@ -108,6 +109,7 @@ const Matches = () => {
             matchesFound.push({
               book: otherBook,
               ownerId: otherBookData.owner_user_id,
+              ownerEmail: profileMap.get(otherBookData.owner_user_id)?.email || '',
               matchScore: match.score,
               matchReasons: match.reasons,
               yourBook: userBook,
@@ -342,7 +344,7 @@ const Matches = () => {
               {/* Hidden BookCard for modal functionality */}
               <div className="hidden">
                 <div data-book-id={match.book.id}>
-                  <BookCard book={match.book} ownerId={match.ownerId} />
+                  <BookCard book={match.book} ownerId={match.ownerId} ownerEmail={match.ownerEmail} />
                 </div>
               </div>
             </Card>

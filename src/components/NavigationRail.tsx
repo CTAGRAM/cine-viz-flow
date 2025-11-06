@@ -3,6 +3,7 @@ import { NavLink } from "react-router-dom";
 import { cn } from "@/lib/utils";
 import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
+import { NotificationsDropdown } from "@/components/NotificationsDropdown";
 import { useEffect, useState } from "react";
 
 export const NavigationRail = () => {
@@ -70,6 +71,12 @@ export const NavigationRail = () => {
           📚
         </div>
       </div>
+      
+      {user && (
+        <div className="mb-4">
+          <NotificationsDropdown />
+        </div>
+      )}
       
       {links.map(({ to, icon: Icon, label, badge }) => (
         <NavLink

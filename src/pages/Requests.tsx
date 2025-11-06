@@ -6,9 +6,10 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Badge } from '@/components/ui/badge';
 import { CompleteSwapDialog } from '@/components/CompleteSwapDialog';
+import { sendEmailNotification } from '@/lib/emailNotifications';
 import { toast } from 'sonner';
 import { useNavigate } from 'react-router-dom';
-import { Inbox, Send, CheckCircle, XCircle, Clock, Loader2, Lock } from 'lucide-react';
+import { Inbox, Send, CheckCircle, XCircle, Clock, Loader2, Lock, Mail, Phone } from 'lucide-react';
 
 interface BookRequest {
   id: string;
@@ -21,7 +22,10 @@ interface BookRequest {
   book_poster_url: string | null;
   requester_name: string;
   requester_email: string;
+  requester_contact: string | null;
   owner_name: string;
+  owner_email: string;
+  owner_contact: string | null;
 }
 
 const Requests = () => {
@@ -61,7 +65,7 @@ const Requests = () => {
           message,
           created_at,
           books!book_requests_book_id_fkey(title, author, poster_url),
-          profiles!book_requests_requester_user_id_fkey(full_name, email)
+          profiles!book_requests_requester_user_id_fkey(full_name, email, contact_info)
         `)
         .eq('owner_user_id', user.id)
         .order('created_at', { ascending: false });
@@ -79,7 +83,10 @@ const Requests = () => {
         book_poster_url: req.books?.poster_url,
         requester_name: req.profiles?.full_name || 'Unknown',
         requester_email: req.profiles?.email || '',
+        requester_contact: req.profiles?.contact_info,
         owner_name: '',
+        owner_email: '',
+        owner_contact: null,
       }));
 
       setIncomingRequests(formattedIncoming);
@@ -94,7 +101,7 @@ const Requests = () => {
           message,
           created_at,
           books!book_requests_book_id_fkey(title, author, poster_url, owner_user_id),
-          profiles!book_requests_owner_user_id_fkey(full_name)
+          profiles!book_requests_owner_user_id_fkey(full_name, email, contact_info)
         `)
         .eq('requester_user_id', user.id)
         .order('created_at', { ascending: false });
@@ -112,7 +119,10 @@ const Requests = () => {
         book_poster_url: req.books?.poster_url,
         requester_name: '',
         requester_email: '',
+        requester_contact: null,
         owner_name: req.profiles?.full_name || 'Unknown',
+        owner_email: req.profiles?.email || '',
+        owner_contact: req.profiles?.contact_info,
       }));
 
       setOutgoingRequests(formattedOutgoing);
@@ -127,6 +137,8 @@ const Requests = () => {
   const handleAccept = async (requestId: string) => {
     setActionLoading(requestId);
     try {
+      const request = incomingRequests.find(r => r.id === requestId);
+      
       const { error } = await supabase
         .from('book_requests')
         .update({ status: 'accepted' })
@@ -135,6 +147,22 @@ const Requests = () => {
       if (error) throw error;
 
       toast.success('Request accepted!');
+      
+      // Send email notification
+      if (request) {
+        await sendEmailNotification({
+          to: request.requester_email,
+          subject: 'Your Book Request Was Accepted!',
+          type: 'request_accepted',
+          data: {
+            userName: request.owner_name || 'the owner',
+            bookTitle: request.book_title,
+            requestId: request.id,
+            appUrl: window.location.origin,
+          },
+        });
+      }
+      
       fetchRequests();
     } catch (error) {
       console.error('Error accepting request:', error);
@@ -308,7 +336,26 @@ const Requests = () => {
                   </CardContent>
                 )}
                 {request.status === 'accepted' && (
-                  <CardContent className="pt-0">
+                  <CardContent className="pt-0 space-y-3">
+                    <div className="bg-blue-50 dark:bg-blue-950 p-4 rounded-lg space-y-2">
+                      <p className="text-sm font-semibold text-blue-800 dark:text-blue-200">
+                        Contact Information:
+                      </p>
+                      <div className="space-y-1">
+                        <div className="flex items-center gap-2 text-sm">
+                          <Mail className="w-4 h-4" />
+                          <a href={`mailto:${request.requester_email}`} className="text-blue-600 dark:text-blue-400 hover:underline">
+                            {request.requester_email}
+                          </a>
+                        </div>
+                        {request.requester_contact && (
+                          <div className="flex items-center gap-2 text-sm">
+                            <Phone className="w-4 h-4" />
+                            <span className="text-blue-800 dark:text-blue-200">{request.requester_contact}</span>
+                          </div>
+                        )}
+                      </div>
+                    </div>
                     <Button
                       onClick={() =>
                         setCompleteSwapDialog({
@@ -401,11 +448,28 @@ const Requests = () => {
                   <CardContent className="pt-0">
                     <div className="bg-green-50 dark:bg-green-950 p-4 rounded-lg space-y-3">
                       <p className="text-sm font-semibold text-green-800 dark:text-green-200">
-                        ✓ Request reserved! Contact {request.owner_name} to arrange the exchange.
+                        ✓ Request reserved! Contact the owner to arrange the exchange.
                       </p>
-                      <p className="text-xs text-green-700 dark:text-green-300">
+                      <p className="text-xs text-green-700 dark:text-green-300 mb-3">
                         This book is now reserved for you. Other requests have been automatically rejected.
                       </p>
+                      <div className="bg-white dark:bg-gray-900 p-3 rounded border border-green-200 dark:border-green-800 space-y-2">
+                        <p className="text-sm font-semibold">Contact Information:</p>
+                        <div className="space-y-1">
+                          <div className="flex items-center gap-2 text-sm">
+                            <Mail className="w-4 h-4" />
+                            <a href={`mailto:${request.owner_email}`} className="text-blue-600 dark:text-blue-400 hover:underline">
+                              {request.owner_email}
+                            </a>
+                          </div>
+                          {request.owner_contact && (
+                            <div className="flex items-center gap-2 text-sm">
+                              <Phone className="w-4 h-4" />
+                              <span>{request.owner_contact}</span>
+                            </div>
+                          )}
+                        </div>
+                      </div>
                     </div>
                   </CardContent>
                 )}
