@@ -83,8 +83,8 @@ export default function AddBook() {
       return;
     }
 
-    if (!formData.id || !formData.name || !formData.rating) {
-      toast.error("Please fill in all required fields");
+    if (!formData.id || !formData.name || !formData.author || !formData.rating) {
+      toast.error("Please fill in all required fields (ISBN, Title, Author, and Rating)");
       return;
     }
 
@@ -98,7 +98,7 @@ export default function AddBook() {
       const bookData = {
         id: formData.id,
         title: formData.name,
-        author: formData.author || null,
+        author: formData.author,
         rating,
         subject: formData.subject || null,
         condition: formData.condition || null,
@@ -185,12 +185,13 @@ export default function AddBook() {
               </div>
 
               <div className="space-y-2 col-span-2">
-                <Label htmlFor="author">Author</Label>
+                <Label htmlFor="author">Author *</Label>
                 <Input
                   id="author"
                   value={formData.author}
                   onChange={(e) => setFormData({ ...formData, author: e.target.value })}
                   placeholder="Author name"
+                  required
                 />
               </div>
 
