@@ -56,73 +56,93 @@ const Requests = () => {
 
     try {
       // Fetch incoming requests (requests for my books)
-      const { data: incoming, error: incomingError } = await supabase
+      const { data: incomingRequests, error: incomingError } = await supabase
         .from('book_requests')
-        .select(`
-          id,
-          book_id,
-          status,
-          message,
-          created_at,
-          books!book_requests_book_id_fkey(title, author, poster_url),
-          profiles!book_requests_requester_user_id_fkey(full_name, email, contact_info)
-        `)
+        .select('*')
         .eq('owner_user_id', user.id)
         .order('created_at', { ascending: false });
 
-      if (incomingError) throw incomingError;
+      if (incomingError) {
+        console.error('Incoming requests error:', incomingError);
+        throw incomingError;
+      }
 
-      const formattedIncoming = (incoming || []).map((req: any) => ({
-        id: req.id,
-        book_id: req.book_id,
-        status: req.status,
-        message: req.message,
-        created_at: req.created_at,
-        book_title: req.books?.title || 'Unknown',
-        book_author: req.books?.author,
-        book_poster_url: req.books?.poster_url,
-        requester_name: req.profiles?.full_name || 'Unknown',
-        requester_email: req.profiles?.email || '',
-        requester_contact: req.profiles?.contact_info,
-        owner_name: '',
-        owner_email: '',
-        owner_contact: null,
+      // Fetch related data for incoming requests
+      const formattedIncoming = await Promise.all((incomingRequests || []).map(async (req: any) => {
+        const { data: book } = await supabase
+          .from('books')
+          .select('title, author, poster_url')
+          .eq('id', req.book_id)
+          .single();
+
+        const { data: requester } = await supabase
+          .from('profiles')
+          .select('full_name, email, contact_info')
+          .eq('id', req.requester_user_id)
+          .single();
+
+        return {
+          id: req.id,
+          book_id: req.book_id,
+          status: req.status,
+          message: req.message,
+          created_at: req.created_at,
+          book_title: book?.title || 'Unknown',
+          book_author: book?.author,
+          book_poster_url: book?.poster_url,
+          requester_name: requester?.full_name || 'Unknown',
+          requester_email: requester?.email || '',
+          requester_contact: requester?.contact_info,
+          owner_name: '',
+          owner_email: '',
+          owner_contact: null,
+        };
       }));
 
       setIncomingRequests(formattedIncoming);
 
       // Fetch outgoing requests (my requests)
-      const { data: outgoing, error: outgoingError } = await supabase
+      const { data: outgoingRequests, error: outgoingError } = await supabase
         .from('book_requests')
-        .select(`
-          id,
-          book_id,
-          status,
-          message,
-          created_at,
-          books!book_requests_book_id_fkey(title, author, poster_url, owner_user_id),
-          profiles!book_requests_owner_user_id_fkey(full_name, email, contact_info)
-        `)
+        .select('*')
         .eq('requester_user_id', user.id)
         .order('created_at', { ascending: false });
 
-      if (outgoingError) throw outgoingError;
+      if (outgoingError) {
+        console.error('Outgoing requests error:', outgoingError);
+        throw outgoingError;
+      }
 
-      const formattedOutgoing = (outgoing || []).map((req: any) => ({
-        id: req.id,
-        book_id: req.book_id,
-        status: req.status,
-        message: req.message,
-        created_at: req.created_at,
-        book_title: req.books?.title || 'Unknown',
-        book_author: req.books?.author,
-        book_poster_url: req.books?.poster_url,
-        requester_name: '',
-        requester_email: '',
-        requester_contact: null,
-        owner_name: req.profiles?.full_name || 'Unknown',
-        owner_email: req.profiles?.email || '',
-        owner_contact: req.profiles?.contact_info,
+      // Fetch related data for outgoing requests
+      const formattedOutgoing = await Promise.all((outgoingRequests || []).map(async (req: any) => {
+        const { data: book } = await supabase
+          .from('books')
+          .select('title, author, poster_url, owner_user_id')
+          .eq('id', req.book_id)
+          .single();
+
+        const { data: owner } = await supabase
+          .from('profiles')
+          .select('full_name, email, contact_info')
+          .eq('id', req.owner_user_id)
+          .single();
+
+        return {
+          id: req.id,
+          book_id: req.book_id,
+          status: req.status,
+          message: req.message,
+          created_at: req.created_at,
+          book_title: book?.title || 'Unknown',
+          book_author: book?.author,
+          book_poster_url: book?.poster_url,
+          requester_name: '',
+          requester_email: '',
+          requester_contact: null,
+          owner_name: owner?.full_name || 'Unknown',
+          owner_email: owner?.email || '',
+          owner_contact: owner?.contact_info,
+        };
       }));
 
       setOutgoingRequests(formattedOutgoing);
