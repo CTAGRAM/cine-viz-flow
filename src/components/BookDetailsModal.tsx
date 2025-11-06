@@ -2,52 +2,50 @@ import { Book } from '@/lib/dataStructures';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { Star, Calendar, Hash, Heart, Edit, User, Package } from 'lucide-react';
+import { Star, Calendar, Hash, Edit, User, Package } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
-import { useToast } from '@/hooks/use-toast';
-import { useState, useEffect } from 'react';
+import { useAuth } from '@/hooks/useAuth';
+import { RequestBookDialog } from '@/components/RequestBookDialog';
+import { useEffect, useState } from 'react';
+import { supabase } from '@/integrations/supabase/client';
 
 interface BookDetailsModalProps {
   book: Book | null;
   open: boolean;
   onOpenChange: (open: boolean) => void;
+  ownerId?: string;
 }
 
-export function BookDetailsModal({ book, open, onOpenChange }: BookDetailsModalProps) {
+export function BookDetailsModal({ book, open, onOpenChange, ownerId }: BookDetailsModalProps) {
   const navigate = useNavigate();
-  const { toast } = useToast();
-  const [isInList, setIsInList] = useState(false);
+  const { user } = useAuth();
+  const [requestCount, setRequestCount] = useState(0);
 
   useEffect(() => {
-    if (book) {
-      const myList = JSON.parse(localStorage.getItem('myList') || '[]');
-      setIsInList(myList.some((b: Book) => b.id === book.id));
+    if (book && user) {
+      fetchRequestCount();
     }
-  }, [book]);
+  }, [book, user]);
+
+  const fetchRequestCount = async () => {
+    if (!book || !user) return;
+
+    try {
+      const { count } = await supabase
+        .from('book_requests')
+        .select('*', { count: 'exact', head: true })
+        .eq('book_id', book.id)
+        .eq('status', 'pending');
+
+      setRequestCount(count || 0);
+    } catch (error) {
+      console.error('Error fetching request count:', error);
+    }
+  };
 
   if (!book) return null;
 
-  const toggleMyList = () => {
-    const myList: Book[] = JSON.parse(localStorage.getItem('myList') || '[]');
-    
-    if (isInList) {
-      const updated = myList.filter(b => b.id !== book.id);
-      localStorage.setItem('myList', JSON.stringify(updated));
-      setIsInList(false);
-      toast({
-        title: "Removed from wishlist",
-        description: `"${book.name}" removed from your wishlist`
-      });
-    } else {
-      myList.push(book);
-      localStorage.setItem('myList', JSON.stringify(myList));
-      setIsInList(true);
-      toast({
-        title: "Added to wishlist",
-        description: `"${book.name}" added to your wishlist`
-      });
-    }
-  };
+  const isOwner = user?.id === ownerId;
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -141,26 +139,45 @@ export function BookDetailsModal({ book, open, onOpenChange }: BookDetailsModalP
 
             {/* Actions */}
             <div className="space-y-3">
-              <Button
-                className="w-full"
-                size="lg"
-                onClick={toggleMyList}
-              >
-                <Heart className={`h-4 w-4 mr-2 ${isInList ? 'fill-current' : ''}`} />
-                {isInList ? 'Remove from Wishlist' : 'Add to Wishlist'}
-              </Button>
+              {!isOwner && ownerId && (
+                <RequestBookDialog
+                  bookId={book.id}
+                  bookTitle={book.name}
+                  ownerId={ownerId}
+                  onRequestSent={() => {
+                    fetchRequestCount();
+                    onOpenChange(false);
+                  }}
+                />
+              )}
 
-              <Button
-                variant="outline"
-                className="w-full"
-                onClick={() => {
-                  navigate(`/add?id=${book.id}`);
-                  onOpenChange(false);
-                }}
-              >
-                <Edit className="h-4 w-4 mr-2" />
-                Edit Book
-              </Button>
+              {isOwner && (
+                <>
+                  <Button
+                    variant="outline"
+                    className="w-full"
+                    onClick={() => {
+                      navigate(`/add?id=${book.id}`);
+                      onOpenChange(false);
+                    }}
+                  >
+                    <Edit className="h-4 w-4 mr-2" />
+                    Edit Book
+                  </Button>
+
+                  {requestCount > 0 && (
+                    <Button
+                      className="w-full"
+                      onClick={() => {
+                        navigate('/requests');
+                        onOpenChange(false);
+                      }}
+                    >
+                      View {requestCount} Pending Request{requestCount !== 1 ? 's' : ''}
+                    </Button>
+                  )}
+                </>
+              )}
 
               <Button
                 variant="outline"

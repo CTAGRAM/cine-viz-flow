@@ -10,6 +10,7 @@ import heroImage from "@/assets/hero-placeholder.jpg";
 export default function Home() {
   const location = useLocation();
   const [books, setBooks] = useState<Book[]>([]);
+  const [booksWithOwner, setBooksWithOwner] = useState<{ book: Book; ownerId: string }[]>([]);
   const [topRated, setTopRated] = useState<Book[]>([]);
   const [hero, setHero] = useState<Book | null>(null);
   const [currentHeroIndex, setCurrentHeroIndex] = useState(0);
@@ -32,20 +33,25 @@ export default function Home() {
           return;
         }
 
-        // Convert Supabase data to Book format
-        const convertedBooks: Book[] = (booksData || []).map((book: any) => ({
-          id: book.id,
-          name: book.title,
-          rating: book.rating,
-          author: book.author,
-          subject: book.subject,
-          condition: book.condition,
-          year: book.year,
-          posterUrl: book.poster_url,
-          owner: book.profiles?.full_name || 'Unknown',
-          available: book.available,
+        // Convert Supabase data to Book format with owner_user_id
+        const booksWithOwnerData = (booksData || []).map((book: any) => ({
+          book: {
+            id: book.id,
+            name: book.title,
+            rating: book.rating,
+            author: book.author,
+            subject: book.subject,
+            condition: book.condition,
+            year: book.year,
+            posterUrl: book.poster_url,
+            owner: book.profiles?.full_name || 'Unknown',
+            available: book.available,
+          },
+          ownerId: book.owner_user_id,
         }));
 
+        setBooksWithOwner(booksWithOwnerData);
+        const convertedBooks: Book[] = booksWithOwnerData.map(b => b.book);
         setBooks(convertedBooks);
 
         // Get top rated books (sorted by rating)
@@ -204,11 +210,14 @@ export default function Home() {
                 id="top-rated-carousel"
                 className="flex gap-3 overflow-x-auto scrollbar-hide scroll-smooth snap-x snap-mandatory pb-2"
               >
-                {topRated.map((book) => (
-                  <div key={book.id} className="flex-none w-48 snap-start">
-                    <BookCard book={book} />
-                  </div>
-                ))}
+                {topRated.map((book) => {
+                  const ownerData = booksWithOwner.find(b => b.book.id === book.id);
+                  return (
+                    <div key={book.id} className="flex-none w-48 snap-start">
+                      <BookCard book={book} ownerId={ownerData?.ownerId} />
+                    </div>
+                  );
+                })}
               </div>
             </div>
           </section>
@@ -226,11 +235,14 @@ export default function Home() {
             </div>
             <div className="relative group">
               <div className="flex gap-3 overflow-x-auto scrollbar-hide scroll-smooth snap-x snap-mandatory pb-2">
-                {books.slice(0, 12).reverse().map((book) => (
-                  <div key={book.id} className="flex-none w-48 snap-start">
-                    <BookCard book={book} />
-                  </div>
-                ))}
+                {books.slice(0, 12).reverse().map((book) => {
+                  const ownerData = booksWithOwner.find(b => b.book.id === book.id);
+                  return (
+                    <div key={book.id} className="flex-none w-48 snap-start">
+                      <BookCard book={book} ownerId={ownerData?.ownerId} />
+                    </div>
+                  );
+                })}
               </div>
             </div>
           </section>
@@ -243,9 +255,10 @@ export default function Home() {
               <h2 className="text-2xl font-bold">Browse All</h2>
             </div>
             <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-3">
-              {books.slice(0, 18).map((book) => (
-                <BookCard key={book.id} book={book} />
-              ))}
+              {books.slice(0, 18).map((book) => {
+                const ownerData = booksWithOwner.find(b => b.book.id === book.id);
+                return <BookCard key={book.id} book={book} ownerId={ownerData?.ownerId} />;
+              })}
             </div>
           </section>
         )}

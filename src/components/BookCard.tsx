@@ -1,16 +1,17 @@
 import { Book } from "@/lib/dataStructures";
-import { BookOpen, Info, Heart } from "lucide-react";
+import { BookOpen, Info } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useState } from "react";
 import { BookDetailsModal } from "./BookDetailsModal";
 
 interface BookCardProps {
   book: Book;
+  ownerId?: string;
   onDetails?: () => void;
   className?: string;
 }
 
-export const BookCard = ({ book, onDetails, className }: BookCardProps) => {
+export const BookCard = ({ book, ownerId, onDetails, className }: BookCardProps) => {
   const [showDetails, setShowDetails] = useState(false);
 
   return (
@@ -72,18 +73,11 @@ export const BookCard = ({ book, onDetails, className }: BookCardProps) => {
               className="flex-1 flex items-center justify-center gap-1 px-3 py-2 bg-primary hover:bg-primary/90 text-primary-foreground rounded-md text-xs font-semibold transition-colors"
               onClick={(e) => {
                 e.stopPropagation();
+                setShowDetails(true);
               }}
             >
               <BookOpen className="w-3 h-3" />
-              Request
-            </button>
-            <button
-              className="w-8 h-8 flex items-center justify-center bg-secondary hover:bg-secondary/80 text-secondary-foreground rounded-full transition-colors"
-              onClick={(e) => {
-                e.stopPropagation();
-              }}
-            >
-              <Heart className="w-3 h-3" />
+              View Details
             </button>
             <button
               className="w-8 h-8 flex items-center justify-center bg-secondary hover:bg-secondary/80 text-secondary-foreground rounded-full transition-colors"
@@ -103,6 +97,7 @@ export const BookCard = ({ book, onDetails, className }: BookCardProps) => {
       book={book}
       open={showDetails}
       onOpenChange={setShowDetails}
+      ownerId={ownerId}
     />
     </>
   );
