@@ -64,7 +64,7 @@ export default function AddMovie() {
   const handleAddRandom = async () => {
     const randomMovie = RANDOM_MOVIES[Math.floor(Math.random() * RANDOM_MOVIES.length)];
     
-    await movieStore.addMovie(randomMovie);
+    await movieStore.addBook(randomMovie);
     
     toast.success(`Added "${randomMovie.name}" randomly!`, {
       description: "Watch the visualization in action"

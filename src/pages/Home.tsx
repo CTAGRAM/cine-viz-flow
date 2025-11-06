@@ -75,10 +75,10 @@ export default function Home() {
       }
       
       let allBooks = bookStore.getAllBooks();
-      console.log('Movies from storage:', allMovies.length);
+      console.log('Books from storage:', allBooks.length);
 
-      // Check if we need to load sample movies
-      const needsSampleData = allMovies.length === 0 || needsVersionUpdate;
+      // Check if we need to load sample books
+      const needsSampleData = allBooks.length === 0 || needsVersionUpdate;
 
       console.log('Needs sample data?', needsSampleData);
 
@@ -89,7 +89,7 @@ export default function Home() {
           await bookStore.addBook(book);
         }
         allBooks = bookStore.getAllBooks();
-        console.log('After loading samples:', allMovies.length);
+        console.log('After loading samples:', allBooks.length);
         
         // Save version
         localStorage.setItem('movieDataVersion', SAMPLE_DATA_VERSION);
