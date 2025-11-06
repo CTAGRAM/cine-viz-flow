@@ -166,6 +166,38 @@ export type Database = {
         }
         Relationships: []
       }
+      request_queues: {
+        Row: {
+          book_id: string | null
+          created_at: string | null
+          id: string
+          queue_data: Json
+          updated_at: string | null
+        }
+        Insert: {
+          book_id?: string | null
+          created_at?: string | null
+          id?: string
+          queue_data?: Json
+          updated_at?: string | null
+        }
+        Update: {
+          book_id?: string | null
+          created_at?: string | null
+          id?: string
+          queue_data?: Json
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "request_queues_book_id_fkey"
+            columns: ["book_id"]
+            isOneToOne: false
+            referencedRelation: "books"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       swaps: {
         Row: {
           book_id: string
@@ -213,6 +245,44 @@ export type Database = {
             columns: ["request_id"]
             isOneToOne: false
             referencedRelation: "book_requests"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      visualization_events: {
+        Row: {
+          created_at: string | null
+          data_structure: string
+          events: Json
+          id: string
+          metadata: Json | null
+          operation_type: string
+          user_id: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          data_structure: string
+          events: Json
+          id?: string
+          metadata?: Json | null
+          operation_type: string
+          user_id?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          data_structure?: string
+          events?: Json
+          id?: string
+          metadata?: Json | null
+          operation_type?: string
+          user_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "visualization_events_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
             referencedColumns: ["id"]
           },
         ]
