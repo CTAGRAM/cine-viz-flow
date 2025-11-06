@@ -51,7 +51,7 @@ export default function Visualizer() {
         {/* Header */}
         <div className="border-b bg-card px-6 py-4 flex items-center justify-between">
           <div>
-            <h1 className="text-2xl font-bold">DSA Visualizer</h1>
+            <h1 className="text-2xl font-bold">Data Structure Visualizer</h1>
             <p className="text-sm text-muted-foreground">
               Watch data structures in action - Real-time step-by-step animations
             </p>
@@ -63,7 +63,7 @@ export default function Visualizer() {
               onClick={() => navigate('/add')}
             >
               <Plus className="h-4 w-4 mr-2" />
-              Add Movie
+              List Book
             </Button>
             <Button
               variant="outline"
@@ -148,14 +148,14 @@ export default function Visualizer() {
           {playbackState.events.length === 0 && (
             <div className="flex-1 flex items-center justify-center p-12 text-center">
               <div className="space-y-4">
-                <div className="text-6xl">🎬</div>
+                <div className="text-6xl">📚</div>
                 <h3 className="text-2xl font-semibold">Ready to visualize!</h3>
                 <p className="text-muted-foreground max-w-md">
-                  Add, search, or update movies to see stunning real-time step-by-step animations of Hash Table and AVL Tree operations
+                  Add, search, or update books to see stunning real-time step-by-step animations of Hash Table and AVL Tree operations
                 </p>
                 <Button onClick={() => navigate('/add')} size="lg">
                   <Plus className="h-4 w-4 mr-2" />
-                  Add Your First Movie
+                  List Your First Book
                 </Button>
               </div>
             </div>

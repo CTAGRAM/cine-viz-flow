@@ -33,11 +33,11 @@ export function OperationBanner({ operation, progress, currentStep, totalSteps }
 
   const getLabel = () => {
     switch (operation.type) {
-      case 'ADD': return operation.movieName ? `Adding "${operation.movieName}"` : 'Adding Movie';
-      case 'SEARCH': return operation.movieName ? `Searching for "${operation.movieName}"` : 'Searching Movie';
-      case 'UPDATE': return operation.movieName ? `Updating "${operation.movieName}"` : 'Updating Movie';
-      case 'DELETE': return operation.movieName ? `Removing "${operation.movieName}"` : 'Deleting Movie';
-      case 'TOP_K': return 'Finding Top Rated Movies';
+      case 'ADD': return operation.movieName ? `Listing "${operation.movieName}"` : 'Listing Book';
+      case 'SEARCH': return operation.movieName ? `Searching for "${operation.movieName}"` : 'Searching Book';
+      case 'UPDATE': return operation.movieName ? `Updating "${operation.movieName}"` : 'Updating Book';
+      case 'DELETE': return operation.movieName ? `Removing "${operation.movieName}"` : 'Deleting Book';
+      case 'TOP_K': return 'Finding Top Rated Books';
     }
   };
 

@@ -10,46 +10,76 @@ import heroImage from "@/assets/hero-placeholder.jpg";
 const SAMPLE_DATA_VERSION = '3.0'; // Book exchange version
 const sampleBooks: Book[] = [
   { 
-    id: "tt1187043", 
-    name: "3 Idiots", 
-    rating: 8.4, 
+    id: "isbn-978-0134685991", 
+    name: "Effective Java", 
+    rating: 9.2,
+    author: "Joshua Bloch",
+    subject: "Computer Science",
+    condition: "Good",
+    year: 2018,
+    posterUrl: "https://images-na.ssl-images-amazon.com/images/I/71F8H2-5-nL.jpg",
+    owner: "Student A",
+    available: true
+  },
+  { 
+    id: "isbn-978-0262033848", 
+    name: "Introduction to Algorithms", 
+    rating: 9.5,
+    author: "Cormen, Leiserson, Rivest, Stein",
+    subject: "Computer Science",
+    condition: "New",
     year: 2009,
-    posterUrl: "https://m.media-amazon.com/images/M/MV5BNTkyOGVjMGEtNmQzZi00NzFlLTlhOWQtODYyMDc2ZGJmYzFhXkEyXkFqcGdeQXVyNjU0OTQ0OTY@._V1_SX300.jpg"
+    posterUrl: "https://mitpress.mit.edu/9780262046305/introduction-to-algorithms/",
+    owner: "Student B",
+    available: true
   },
   { 
-    id: "tt5074352", 
-    name: "Dangal", 
-    rating: 8.3, 
-    year: 2016,
-    posterUrl: "https://m.media-amazon.com/images/M/MV5BMTQ4MzQzMzM2Nl5BMl5BanBnXkFtZTgwMTQ1NzU3MDI@._V1_SX300.jpg"
+    id: "isbn-978-0132350884", 
+    name: "Clean Code", 
+    rating: 8.9,
+    author: "Robert C. Martin",
+    subject: "Computer Science",
+    condition: "Good",
+    year: 2008,
+    posterUrl: "https://m.media-amazon.com/images/I/51E2055ZGUL.jpg",
+    owner: "Student C",
+    available: true
   },
   { 
-    id: "tt2338151", 
-    name: "PK", 
-    rating: 8.1, 
+    id: "isbn-978-0073383095", 
+    name: "Linear Algebra and Its Applications", 
+    rating: 8.7,
+    author: "David C. Lay",
+    subject: "Mathematics",
+    condition: "Fair",
+    year: 2015,
+    posterUrl: "https://m.media-amazon.com/images/I/51Dc8dGRUSL.jpg",
+    owner: "Student D",
+    available: true
+  },
+  { 
+    id: "isbn-978-1292024448", 
+    name: "Physics for Scientists and Engineers", 
+    rating: 9.1,
+    author: "Raymond A. Serway",
+    subject: "Physics",
+    condition: "Good",
     year: 2014,
-    posterUrl: "https://m.media-amazon.com/images/M/MV5BMTYzOTE2NjkxN15BMl5BanBnXkFtZTgwMDgzMTg0MzE@._V1_SX300.jpg"
+    posterUrl: "https://m.media-amazon.com/images/I/51RXZ9YGNVL.jpg",
+    owner: "Student E",
+    available: false
   },
   { 
-    id: "tt4849438", 
-    name: "Baahubali 2: The Conclusion", 
-    rating: 8.2, 
-    year: 2017,
-    posterUrl: "https://m.media-amazon.com/images/M/MV5BY2VmYjZkOTItOWYzZC00NWEwLTliYzgtNDk0MjNmNTRlNzVjXkEyXkFqcGdeQXVyODE5NzE3OTE@._V1_SX300.jpg"
-  },
-  { 
-    id: "tt0986264", 
-    name: "Taare Zameen Par", 
-    rating: 8.3, 
-    year: 2007,
-    posterUrl: "https://m.media-amazon.com/images/M/MV5BNTVkMTFiZWItOTI0Zi00ZjYwLTgyNzctMTE1NDdjMDgwMDgxXkEyXkFqcGdeQXVyODE5NzE3OTE@._V1_SX300.jpg"
-  },
-  { 
-    id: "tt0169102", 
-    name: "Lagaan", 
-    rating: 8.1, 
-    year: 2001,
-    posterUrl: "https://m.media-amazon.com/images/M/MV5BNDYxNzQ5ZjItM2JlMi00MjlhLTk5NjAtMTRkZWVkOTg0NjcwXkEyXkFqcGdeQXVyNjQ2MjQ5NzM@._V1_SX300.jpg"
+    id: "isbn-978-0321570567", 
+    name: "Thomas' Calculus", 
+    rating: 8.8,
+    author: "George B. Thomas",
+    subject: "Mathematics",
+    condition: "Good",
+    year: 2013,
+    posterUrl: "https://m.media-amazon.com/images/I/51NQJMS5VBL.jpg",
+    owner: "Student F",
+    available: true
   },
 ];
 
@@ -60,11 +90,11 @@ export default function Home() {
   const [currentHeroIndex, setCurrentHeroIndex] = useState(0);
 
   useEffect(() => {
-    const loadMovies = async () => {
-      console.log('Loading movies...');
+    const loadBooks = async () => {
+      console.log('Loading books...');
       
       // Check version first
-      const currentVersion = localStorage.getItem('movieDataVersion');
+      const currentVersion = localStorage.getItem('bookDataVersion');
       const needsVersionUpdate = currentVersion !== SAMPLE_DATA_VERSION;
       
       if (needsVersionUpdate) {
@@ -92,14 +122,14 @@ export default function Home() {
         console.log('After loading samples:', allBooks.length);
         
         // Save version
-        localStorage.setItem('movieDataVersion', SAMPLE_DATA_VERSION);
+        localStorage.setItem('bookDataVersion', SAMPLE_DATA_VERSION);
       }
 
       setBooks(allBooks);
 
       const top = await bookStore.topRated(10);
       setTopRated(top);
-      console.log('Top rated movies:', top.length);
+      console.log('Top rated books:', top.length);
 
       if (top.length > 0) {
         setHero(top[0]);
@@ -107,7 +137,7 @@ export default function Home() {
       }
     };
 
-    loadMovies();
+    loadBooks();
   }, []);
 
   // Auto-rotate hero slideshow every 5 seconds
@@ -157,16 +187,16 @@ export default function Home() {
           <div className="relative z-10 h-full flex flex-col justify-between px-16 py-8">
             {/* Top carousel indicators */}
             <div className="flex justify-center gap-2">
-              {topRated.slice(0, 6).map((movie, index) => (
+              {topRated.slice(0, 6).map((book, index) => (
                 <button
-                  key={movie.id}
+                  key={book.id}
                   onClick={() => setCurrentHeroIndex(index)}
                   className={`transition-all ${
                     index === currentHeroIndex
-                      ? 'w-12 h-1 bg-white'
-                      : 'w-8 h-1 bg-white/50 hover:bg-white/70'
+                      ? 'w-12 h-1 bg-primary'
+                      : 'w-8 h-1 bg-primary/50 hover:bg-primary/70'
                   }`}
-                  aria-label={`View ${movie.name}`}
+                  aria-label={`View ${book.name}`}
                 />
               ))}
             </div>
@@ -175,19 +205,29 @@ export default function Home() {
             <div className="max-w-2xl">
               <div key={hero.id} className="space-y-4 animate-slide-up">
                 <div className="flex items-center gap-2 text-sm">
-                  <div className="px-2 py-1 bg-primary rounded">N</div>
-                  <span className="text-muted-foreground">FEATURED</span>
+                  <div className="px-2 py-1 bg-primary text-primary-foreground rounded font-display">📚</div>
+                  <span className="text-foreground/70">AVAILABLE NOW</span>
                 </div>
 
-                <h1 className="text-6xl font-bold tracking-tight">{hero.name}</h1>
+                <h1 className="text-6xl font-display font-bold tracking-tight">{hero.name}</h1>
+                
+                {hero.author && (
+                  <p className="text-xl italic text-foreground/80">by {hero.author}</p>
+                )}
 
-                <div className="flex items-center gap-4 text-sm">
+                <div className="flex items-center gap-4 text-sm flex-wrap">
                   <div className="flex items-center gap-2">
-                    <div className="px-2 py-1 bg-yellow-500 text-black rounded font-bold">
-                      IMDb
+                    <div className="px-3 py-1 bg-primary text-primary-foreground rounded-lg font-bold">
+                      ⭐ {hero.rating}/10
                     </div>
-                    <span className="font-semibold">{hero.rating}/10</span>
+                    <span className="font-semibold">Quality Score</span>
                   </div>
+                  {hero.subject && (
+                    <span className="px-3 py-1 bg-secondary text-secondary-foreground rounded-lg">{hero.subject}</span>
+                  )}
+                  {hero.condition && (
+                    <span className="px-3 py-1 bg-accent text-accent-foreground rounded-lg">{hero.condition}</span>
+                  )}
                   {hero.year && (
                     <span className="text-muted-foreground">{hero.year}</span>
                   )}
@@ -196,9 +236,9 @@ export default function Home() {
                 <div className="flex gap-3 pt-4">
                   <Button size="lg" className="gap-2 bg-primary hover:bg-primary/90 text-primary-foreground px-8">
                   <BookOpen className="w-5 h-5" />
-                  Request
-                  </Button>
-                  <Button size="lg" variant="secondary" className="gap-2 bg-white/20 hover:bg-white/30 text-white backdrop-blur-sm">
+                  Request Book
+                </Button>
+                  <Button size="lg" variant="secondary" className="gap-2">
                     <Info className="w-5 h-5" />
                     More Info
                   </Button>
@@ -215,7 +255,7 @@ export default function Home() {
         {topRated.length > 0 && (
           <section>
             <div className="flex items-center justify-between mb-4">
-              <h2 className="text-2xl font-bold">Top Rated on IMDb</h2>
+              <h2 className="text-2xl font-bold">Most Requested Books</h2>
               <button 
                 onClick={() => window.location.href = '/visualizer'}
                 className="flex items-center gap-1 text-sm text-muted-foreground hover:text-primary transition-colors"
@@ -277,12 +317,12 @@ export default function Home() {
 
         {books.length === 0 && (
           <div className="flex flex-col items-center justify-center py-24 text-center">
-            <h2 className="text-3xl font-bold mb-4">No Movies Yet</h2>
+            <h2 className="text-3xl font-bold mb-4">No Books Yet</h2>
             <p className="text-muted-foreground mb-8 max-w-md">
-              Start building your collection by adding movies to your catalog.
+              Start building your book exchange by listing books you want to share.
             </p>
             <Button size="lg" asChild>
-              <a href="/add">Add Your First Movie</a>
+              <a href="/add">List Your First Book</a>
             </Button>
           </div>
         )}

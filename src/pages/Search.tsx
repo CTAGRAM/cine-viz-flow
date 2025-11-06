@@ -35,7 +35,7 @@ export default function Search() {
       setFoundInBucket(0); // Mark as found via hash table
       setResults([exactMatch]);
       toast({
-        title: "Movie found! 🎬",
+        title: "Book found! 📚",
         description: `Found "${exactMatch.name}" via Hash Table lookup`
       });
     } else {
@@ -53,12 +53,12 @@ export default function Search() {
       if (filtered.length === 0) {
         toast({
           title: "No results",
-          description: "No movies match your search criteria",
+          description: "No books match your search criteria",
           variant: "destructive"
         });
       } else {
         toast({
-          title: `Found ${filtered.length} movie${filtered.length > 1 ? 's' : ''}`,
+          title: `Found ${filtered.length} book${filtered.length > 1 ? 's' : ''}`,
           description: "Results filtered by title and rating"
         });
       }
@@ -70,21 +70,21 @@ export default function Search() {
       <div className="max-w-6xl mx-auto space-y-8">
         {/* Search Header */}
         <div className="space-y-2">
-          <h1 className="text-4xl font-bold">Search Movies</h1>
+          <h1 className="text-4xl font-bold">Search Books</h1>
           <p className="text-muted-foreground">
-            Search by Movie ID (Hash Table lookup) or Title (AVL Tree traversal)
+            Search by ISBN (Hash Table lookup) or Title (AVL Tree traversal)
           </p>
         </div>
 
         {/* Search Bar */}
         <div className="flex gap-4">
-          <Input
-            placeholder="Enter Movie ID or Title..."
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-            onKeyDown={(e) => e.key === 'Enter' && handleSearch()}
-            className="text-lg h-14"
-          />
+        <Input
+          placeholder="Enter ISBN or Book Title..."
+          value={searchQuery}
+          onChange={(e) => setSearchQuery(e.target.value)}
+          onKeyDown={(e) => e.key === 'Enter' && handleSearch()}
+          className="text-lg h-14"
+        />
           <Button onClick={handleSearch} size="lg" className="px-8">
             <SearchIcon className="h-5 w-5 mr-2" />
             Search
@@ -164,10 +164,10 @@ export default function Search() {
         {/* Empty State */}
         {!searchQuery && results.length === 0 && (
           <div className="text-center py-12">
-            <div className="text-6xl mb-4">🎬</div>
+            <div className="text-6xl mb-4">📚</div>
             <h3 className="text-xl font-semibold mb-2">Start searching</h3>
             <p className="text-muted-foreground">
-              Enter a movie ID or title above to find movies
+              Enter an ISBN or book title above to find books
             </p>
           </div>
         )}

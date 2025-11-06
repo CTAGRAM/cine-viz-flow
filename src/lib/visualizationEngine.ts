@@ -2,8 +2,8 @@ import { VisualizationEvent } from './dataStructures';
 
 export interface OperationMetadata {
   type: 'ADD' | 'SEARCH' | 'UPDATE' | 'DELETE' | 'TOP_K';
-  movieId?: string;
-  movieName?: string;
+  movieId?: string; // kept for backward compatibility
+  movieName?: string; // kept for backward compatibility
   timestamp: number;
   eventsCount: number;
 }

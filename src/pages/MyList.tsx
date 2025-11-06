@@ -20,25 +20,25 @@ export default function MyList() {
     }
   };
 
-  const removeFromList = (movieId: string) => {
-    const updated = myList.filter(m => m.id !== movieId);
+  const removeFromList = (bookId: string) => {
+    const updated = myList.filter(b => b.id !== bookId);
     setMyList(updated);
     localStorage.setItem('myList', JSON.stringify(updated));
     
     toast({
-      title: "Removed from list",
-      description: "Movie has been removed from your list"
+      title: "Removed from wishlist",
+      description: "Book has been removed from your wishlist"
     });
   };
 
   const clearAll = () => {
-    if (window.confirm('Are you sure you want to clear your entire list?')) {
+    if (window.confirm('Are you sure you want to clear your entire wishlist?')) {
       setMyList([]);
       localStorage.removeItem('myList');
       
       toast({
-        title: "List cleared",
-        description: "All movies have been removed from your list"
+        title: "Wishlist cleared",
+        description: "All books have been removed from your wishlist"
       });
     }
   };
@@ -49,9 +49,9 @@ export default function MyList() {
         {/* Header */}
         <div className="flex items-center justify-between">
           <div>
-            <h1 className="text-4xl font-bold">My List</h1>
+            <h1 className="text-4xl font-bold">My Wishlist</h1>
             <p className="text-muted-foreground">
-              {myList.length} movie{myList.length !== 1 ? 's' : ''} saved
+              {myList.length} book{myList.length !== 1 ? 's' : ''} saved
             </p>
           </div>
           
@@ -86,10 +86,10 @@ export default function MyList() {
         ) : (
           /* Empty State */
           <div className="text-center py-24">
-            <div className="text-8xl mb-6">📝</div>
-            <h2 className="text-3xl font-bold mb-4">Your list is empty</h2>
+            <div className="text-8xl mb-6">📚</div>
+            <h2 className="text-3xl font-bold mb-4">Your wishlist is empty</h2>
             <p className="text-muted-foreground text-lg max-w-md mx-auto">
-              Start adding movies to your list to keep track of what you want to watch
+              Start adding books to your wishlist to keep track of what you want to read or exchange
             </p>
           </div>
         )}

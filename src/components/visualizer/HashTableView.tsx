@@ -48,28 +48,28 @@ export function HashTableView({ events, buckets }: HashTableViewProps) {
 
     // Set narration and highlights based on current event (plain English)
     switch (lastEvent.type) {
-      case 'hash-probe':
+        case 'hash-probe':
         setHighlightedBucket(lastEvent.bucket);
-        setNarration(`Finding the right box for this movie...`);
+        setNarration(`Finding the right box for this book...`);
         setHashCalculation({ movieId: lastEvent.movieId, bucket: lastEvent.bucket });
         break;
       case 'hash-chain-compare':
         setHighlightedBucket(lastEvent.bucket);
-        setNarration(lastEvent.match ? `✓ Found it in Box ${lastEvent.bucket}!` : `Checking movies in this box...`);
+        setNarration(lastEvent.match ? `✓ Found it in Box ${lastEvent.bucket}!` : `Checking books in this box...`);
         break;
       case 'hash-insert':
         setHighlightedBucket(lastEvent.bucket);
-        setNarration(`✓ Movie saved in Box ${lastEvent.bucket}`);
+        setNarration(`✓ Book saved in Box ${lastEvent.bucket}`);
         break;
       case 'hash-update':
         setHighlightedBucket(lastEvent.bucket);
-        setNarration(`✓ Movie updated in Box ${lastEvent.bucket}`);
+        setNarration(`✓ Book updated in Box ${lastEvent.bucket}`);
         break;
       case 'hash-resize-start':
         setNarration(`📦 Growing storage: ${lastEvent.oldSize} → ${lastEvent.newSize} boxes`);
         break;
       case 'hash-rehash':
-        setNarration(`Moving movie: Box ${lastEvent.oldBucket} → Box ${lastEvent.newBucket}`);
+        setNarration(`Moving book: Box ${lastEvent.oldBucket} → Box ${lastEvent.newBucket}`);
         break;
       case 'hash-resize-complete':
         setNarration('✓ Storage expanded successfully!');
@@ -101,14 +101,14 @@ export function HashTableView({ events, buckets }: HashTableViewProps) {
       {/* Help Banner */}
       <div className="bg-muted/50 px-6 py-2 text-sm text-muted-foreground border-b flex items-center justify-center gap-2">
         <Info className="h-4 w-4" />
-        Movies are distributed across boxes using a hash function for fast lookups
+        Books are distributed across boxes using a hash function for fast lookups
         <TooltipProvider>
           <Tooltip>
             <TooltipTrigger asChild>
               <span className="text-primary cursor-help underline">Learn more</span>
             </TooltipTrigger>
             <TooltipContent className="max-w-xs">
-              <p className="text-sm">The box number is calculated from the movie ID, not sequential. This ensures even distribution and quick searches.</p>
+              <p className="text-sm">The box number is calculated from the book ID, not sequential. This ensures even distribution and quick searches.</p>
             </TooltipContent>
           </Tooltip>
         </TooltipProvider>
@@ -148,7 +148,7 @@ export function HashTableView({ events, buckets }: HashTableViewProps) {
                 <div className="flex items-center gap-3">
                   <div className="bg-primary/10 text-primary px-3 py-1 rounded font-bold">Step 1</div>
                   <div className="flex-1">
-                    <div className="text-sm text-muted-foreground">Movie ID</div>
+                    <div className="text-sm text-muted-foreground">Book ID</div>
                     <div className="font-mono font-bold">{hashCalculation.movieId}</div>
                   </div>
                 </div>

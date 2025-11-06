@@ -296,7 +296,7 @@ export function AVLTreeView({ events, root }: AVLTreeViewProps) {
                   <Info className="h-4 w-4 text-muted-foreground cursor-help" />
                 </TooltipTrigger>
                 <TooltipContent className="max-w-xs">
-                  <p className="text-sm">This tree automatically keeps movies sorted by rating and stays balanced for fast lookups.</p>
+                  <p className="text-sm">This tree automatically keeps books sorted by rating and stays balanced for fast lookups.</p>
                 </TooltipContent>
               </Tooltip>
             </TooltipProvider>
