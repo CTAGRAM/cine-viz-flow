@@ -1,94 +1,11 @@
 import { useEffect, useState } from "react";
 import { useLocation } from "react-router-dom";
+import { supabase } from "@/integrations/supabase/client";
 import { Book } from "@/lib/dataStructures";
-import { bookStore } from "@/lib/bookStore";
 import { BookCard } from "@/components/BookCard";
 import { BookOpen, Info, ChevronRight } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import heroImage from "@/assets/hero-placeholder.jpg";
-import effectiveJava from "@/assets/books/effective-java.jpg";
-import introAlgorithms from "@/assets/books/intro-algorithms.jpg";
-import cleanCode from "@/assets/books/clean-code.jpg";
-import linearAlgebra from "@/assets/books/linear-algebra.jpg";
-import physicsSerway from "@/assets/books/physics-serway.jpg";
-import thomasCalculus from "@/assets/books/thomas-calculus.jpg";
-
-// Sample books for demo - diverse academic books
-const SAMPLE_DATA_VERSION = '3.0'; // Book exchange version
-const sampleBooks: Book[] = [
-  { 
-    id: "isbn-978-0134685991", 
-    name: "Effective Java", 
-    rating: 9.2,
-    author: "Joshua Bloch",
-    subject: "Computer Science",
-    condition: "Good",
-    year: 2018,
-    posterUrl: effectiveJava,
-    owner: "Student A",
-    available: true
-  },
-  { 
-    id: "isbn-978-0262033848", 
-    name: "Introduction to Algorithms", 
-    rating: 9.5,
-    author: "Cormen, Leiserson, Rivest, Stein",
-    subject: "Computer Science",
-    condition: "New",
-    year: 2009,
-    posterUrl: introAlgorithms,
-    owner: "Student B",
-    available: true
-  },
-  { 
-    id: "isbn-978-0132350884", 
-    name: "Clean Code", 
-    rating: 8.9,
-    author: "Robert C. Martin",
-    subject: "Computer Science",
-    condition: "Good",
-    year: 2008,
-    posterUrl: cleanCode,
-    owner: "Student C",
-    available: true
-  },
-  { 
-    id: "isbn-978-0073383095", 
-    name: "Linear Algebra and Its Applications", 
-    rating: 8.7,
-    author: "David C. Lay",
-    subject: "Mathematics",
-    condition: "Fair",
-    year: 2015,
-    posterUrl: linearAlgebra,
-    owner: "Student D",
-    available: true
-  },
-  { 
-    id: "isbn-978-1292024448", 
-    name: "Physics for Scientists and Engineers", 
-    rating: 9.1,
-    author: "Raymond A. Serway",
-    subject: "Physics",
-    condition: "Good",
-    year: 2014,
-    posterUrl: physicsSerway,
-    owner: "Student E",
-    available: false
-  },
-  { 
-    id: "isbn-978-0321570567", 
-    name: "Thomas' Calculus", 
-    rating: 8.8,
-    author: "George B. Thomas",
-    subject: "Mathematics",
-    condition: "Good",
-    year: 2013,
-    posterUrl: thomasCalculus,
-    owner: "Student F",
-    available: true
-  },
-];
 
 export default function Home() {
   const location = useLocation();
@@ -96,52 +13,54 @@ export default function Home() {
   const [topRated, setTopRated] = useState<Book[]>([]);
   const [hero, setHero] = useState<Book | null>(null);
   const [currentHeroIndex, setCurrentHeroIndex] = useState(0);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     const loadBooks = async () => {
-      console.log('Loading books...');
-      
-      // Check version first
-      const currentVersion = localStorage.getItem('bookDataVersion');
-      const needsVersionUpdate = currentVersion !== SAMPLE_DATA_VERSION;
-      
-      if (needsVersionUpdate) {
-        console.log(`Version mismatch (${currentVersion} -> ${SAMPLE_DATA_VERSION}). Clearing old data...`);
-        bookStore.clearAll();
-      } else {
-        await bookStore.loadFromStorage();
-      }
-      
-      let allBooks = bookStore.getAllBooks();
-      console.log('Books from storage:', allBooks.length);
+      try {
+        // Fetch all books from Supabase
+        const { data: booksData, error } = await supabase
+          .from('books')
+          .select(`
+            *,
+            profiles:owner_user_id (full_name)
+          `)
+          .order('created_at', { ascending: false });
 
-      // Check if we need to load sample books
-      const needsSampleData = allBooks.length === 0 || needsVersionUpdate;
-
-      console.log('Needs sample data?', needsSampleData);
-
-      if (needsSampleData) {
-        console.log('Loading sample books...');
-        // Load sample books
-        for (const book of sampleBooks) {
-          await bookStore.addBook(book);
+        if (error) {
+          console.error('Error fetching books:', error);
+          return;
         }
-        allBooks = bookStore.getAllBooks();
-        console.log('After loading samples:', allBooks.length);
-        
-        // Save version
-        localStorage.setItem('bookDataVersion', SAMPLE_DATA_VERSION);
-      }
 
-      setBooks(allBooks);
+        // Convert Supabase data to Book format
+        const convertedBooks: Book[] = (booksData || []).map((book: any) => ({
+          id: book.id,
+          name: book.title,
+          rating: book.rating,
+          author: book.author,
+          subject: book.subject,
+          condition: book.condition,
+          year: book.year,
+          posterUrl: book.poster_url,
+          owner: book.profiles?.full_name || 'Unknown',
+          available: book.available,
+        }));
 
-      const top = await bookStore.topRated(10);
-      setTopRated(top);
-      console.log('Top rated books:', top.length);
+        setBooks(convertedBooks);
 
-      if (top.length > 0) {
-        setHero(top[0]);
-        console.log('Hero set to:', top[0].name);
+        // Get top rated books (sorted by rating)
+        const topBooks = [...convertedBooks]
+          .sort((a, b) => b.rating - a.rating)
+          .slice(0, 10);
+        setTopRated(topBooks);
+
+        if (topBooks.length > 0) {
+          setHero(topBooks[0]);
+        }
+      } catch (error) {
+        console.error('Error loading books:', error);
+      } finally {
+        setLoading(false);
       }
     };
 
@@ -176,8 +95,16 @@ export default function Home() {
 
   return (
     <div className="min-h-screen bg-background">
-      {/* Hero Section */}
-      {hero && (
+      {loading ? (
+        <div className="flex items-center justify-center min-h-[70vh]">
+          <div className="text-center">
+            <p className="text-muted-foreground">Loading books...</p>
+          </div>
+        </div>
+      ) : (
+        <>
+          {/* Hero Section */}
+          {hero && (
         <div className="relative h-[70vh] w-full overflow-hidden">
           {/* Background with poster */}
           <div className="absolute inset-0">
@@ -254,13 +181,13 @@ export default function Home() {
               </div>
             </div>
           </div>
-        </div>
-      )}
+          </div>
+        )}
 
-      {/* Carousels */}
-      <div className="space-y-12 px-16 py-12">
-        {/* Top Rated */}
-        {topRated.length > 0 && (
+        {/* Carousels */}
+        <div className="space-y-12 px-16 py-12">
+          {/* Top Rated */}
+          {topRated.length > 0 && (
           <section>
             <div className="flex items-center justify-between mb-4">
               <h2 className="text-2xl font-bold">Most Requested Books</h2>
@@ -309,7 +236,7 @@ export default function Home() {
           </section>
         )}
 
-        {/* All Movies */}
+        {/* All Books */}
         {books.length > 0 && (
           <section>
             <div className="flex items-center justify-between mb-4">
@@ -334,7 +261,9 @@ export default function Home() {
             </Button>
           </div>
         )}
-      </div>
+        </div>
+        </>
+      )}
     </div>
   );
 }

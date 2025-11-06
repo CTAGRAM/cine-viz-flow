@@ -1,12 +1,13 @@
 import { useState, useEffect } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
-import { bookStore as movieStore } from "@/lib/bookStore";
+import { useAuth } from "@/hooks/useAuth";
+import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { toast } from "sonner";
-import { ArrowLeft, Dices, BookOpen } from "lucide-react";
+import { ArrowLeft, BookOpen } from "lucide-react";
 
 const RANDOM_BOOKS = [
   { id: 'isbn-978-0262033848', name: 'Introduction to Algorithms', author: 'Cormen, Leiserson, Rivest, Stein', rating: 9.5, subject: 'Computer Science', condition: 'New', posterUrl: 'https://mitpress.mit.edu/9780262046305/introduction-to-algorithms/', year: 2009, owner: 'Random User', available: true },
@@ -19,6 +20,7 @@ const RANDOM_BOOKS = [
 
 export default function AddBook() {
   const navigate = useNavigate();
+  const { user } = useAuth();
   const [searchParams] = useSearchParams();
   const editId = searchParams.get("id");
   
@@ -31,44 +33,55 @@ export default function AddBook() {
     condition: "",
     posterUrl: "",
     year: "",
-    owner: "",
   });
 
   useEffect(() => {
+    if (!user) {
+      toast.error("Please sign in to list books");
+      navigate("/auth");
+      return;
+    }
+
     if (editId) {
       const loadBook = async () => {
-        const book = await movieStore.searchBook(editId);
+        const { data: book, error } = await supabase
+          .from('books')
+          .select('*')
+          .eq('id', editId)
+          .eq('owner_user_id', user.id)
+          .single();
+
+        if (error) {
+          toast.error("Book not found or you don't have permission to edit it");
+          navigate('/');
+          return;
+        }
+
         if (book) {
           setFormData({
             id: book.id,
-            name: book.name,
+            name: book.title,
             author: book.author || "",
             rating: book.rating.toString(),
             subject: book.subject || "",
             condition: book.condition || "",
-            posterUrl: book.posterUrl || "",
+            posterUrl: book.poster_url || "",
             year: book.year?.toString() || "",
-            owner: book.owner || "",
           });
         }
       };
       loadBook();
     }
-  }, [editId]);
-
-  const handleAddRandom = async () => {
-    const randomBook = RANDOM_BOOKS[Math.floor(Math.random() * RANDOM_BOOKS.length)];
-    
-    await movieStore.addBook(randomBook);
-    
-    toast.success(`Added "${randomBook.name}" randomly!`, {
-      description: "Watch the visualization in action"
-    });
-    navigate("/visualizer");
-  };
+  }, [editId, user, navigate]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+
+    if (!user) {
+      toast.error("Please sign in to list books");
+      navigate("/auth");
+      return;
+    }
 
     if (!formData.id || !formData.name || !formData.rating) {
       toast.error("Please fill in all required fields");
@@ -81,21 +94,47 @@ export default function AddBook() {
       return;
     }
 
-    await movieStore.addBook({
-      id: formData.id,
-      name: formData.name,
-      author: formData.author || undefined,
-      rating,
-      subject: formData.subject || undefined,
-      condition: formData.condition || undefined,
-      posterUrl: formData.posterUrl || undefined,
-      year: formData.year ? parseInt(formData.year) : undefined,
-      owner: formData.owner || undefined,
-      available: true,
-    });
+    try {
+      const bookData = {
+        id: formData.id,
+        title: formData.name,
+        author: formData.author || null,
+        rating,
+        subject: formData.subject || null,
+        condition: formData.condition || null,
+        poster_url: formData.posterUrl || null,
+        year: formData.year ? parseInt(formData.year) : null,
+        owner_user_id: user.id,
+        available: true,
+      };
 
-    toast.success(editId ? "Book updated successfully!" : "Book listed successfully!");
-    navigate("/visualizer");
+      if (editId) {
+        const { error } = await supabase
+          .from('books')
+          .update(bookData)
+          .eq('id', editId)
+          .eq('owner_user_id', user.id);
+
+        if (error) throw error;
+        toast.success("Book updated successfully!");
+      } else {
+        const { error } = await supabase
+          .from('books')
+          .insert(bookData);
+
+        if (error) throw error;
+        toast.success("Book listed successfully!");
+      }
+
+      navigate("/");
+    } catch (error: any) {
+      console.error('Error saving book:', error);
+      if (error.code === '23505') {
+        toast.error("A book with this ISBN already exists");
+      } else {
+        toast.error("Failed to save book. Please try again.");
+      }
+    }
   };
 
   return (
@@ -114,22 +153,9 @@ export default function AddBook() {
           <div>
             <h1 className="text-4xl font-display font-bold mb-2">{editId ? "Edit Book" : "List a Book"}</h1>
             <p className="text-muted-foreground">
-              {editId ? "Update book details and watch structures rebalance" : "List a book for exchange and watch the data structures update in real-time"}
+              {editId ? "Update your book details" : "List a book for exchange with other students"}
             </p>
           </div>
-
-          {!editId && (
-            <Button
-              type="button"
-              onClick={handleAddRandom}
-              size="lg"
-              variant="outline"
-              className="w-full border-2 border-dashed hover:border-primary"
-            >
-              <Dices className="w-5 h-5 mr-2" />
-              📚 Add Random Book
-            </Button>
-          )}
 
           <form onSubmit={handleSubmit} className="space-y-6 bg-card p-8 rounded-lg border border-border">
             <div className="grid grid-cols-2 gap-4">
@@ -233,16 +259,6 @@ export default function AddBook() {
               </div>
 
               <div className="space-y-2 col-span-2">
-                <Label htmlFor="owner">Owner / Your Name</Label>
-                <Input
-                  id="owner"
-                  value={formData.owner}
-                  onChange={(e) => setFormData({ ...formData, owner: e.target.value })}
-                  placeholder="Your name"
-                />
-              </div>
-
-              <div className="space-y-2 col-span-2">
                 <Label htmlFor="posterUrl">Cover Image URL</Label>
                 <Input
                   id="posterUrl"
@@ -263,9 +279,9 @@ export default function AddBook() {
                 type="button"
                 size="lg"
                 variant="outline"
-                onClick={() => navigate("/visualizer")}
+                onClick={() => navigate("/")}
               >
-                View Visualizer
+                Cancel
               </Button>
             </div>
           </form>
