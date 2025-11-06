@@ -68,7 +68,7 @@ export type Database = {
           subject: string
           title: string
           updated_at: string
-          year: number
+          year: number | null
         }
         Insert: {
           author: string
@@ -82,7 +82,7 @@ export type Database = {
           subject: string
           title: string
           updated_at?: string
-          year: number
+          year?: number | null
         }
         Update: {
           author?: string
@@ -96,7 +96,7 @@ export type Database = {
           subject?: string
           title?: string
           updated_at?: string
-          year?: number
+          year?: number | null
         }
         Relationships: []
       }
