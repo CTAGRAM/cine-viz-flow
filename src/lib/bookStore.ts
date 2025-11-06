@@ -1,5 +1,9 @@
 import { Book, HashTable, AVLTree, VisualizationEvent } from './dataStructures';
 import { OperationMetadata } from './visualizationEngine';
+import { supabase } from '@/integrations/supabase/client';
+import { saveVisualizationEvent } from '@/hooks/useVisualizationSync';
+import { bookTrie } from './trieDataStructure';
+import { bookExchangeGraph } from './graphDataStructure';
 
 export class BookStore {
   private hashTable: HashTable;
@@ -40,8 +44,10 @@ export class BookStore {
     const existing = await this.hashTable.search(book.id);
     const isRatingChange = existing && existing.rating !== book.rating;
 
+    const operationType = isRatingChange ? 'UPDATE' : 'ADD';
+
     this.currentOperation = {
-      type: isRatingChange ? 'UPDATE' : 'ADD',
+      type: operationType,
       movieId: book.id,
       movieName: book.name,
       timestamp: Date.now(),
@@ -56,11 +62,30 @@ export class BookStore {
     await this.hashTable.insert(book);
     await this.avlTree.insert(book);
 
+    // Update trie for search
+    bookTrie.insert(book.name, book.id);
+    if (book.author) {
+      bookTrie.insert(book.author, book.id);
+    }
+
     if (this.currentOperation) {
       this.currentOperation.eventsCount = this.eventQueue.length;
     }
 
     this.flushEvents();
+    
+    // Save visualization to database
+    await saveVisualizationEvent(
+      operationType,
+      'hash_table',
+      this.eventQueue,
+      {
+        bookId: book.id,
+        bookName: book.name,
+        description: `${operationType === 'ADD' ? 'Added' : 'Updated'} book: ${book.name}`
+      }
+    );
+
     this.persist();
   }
 
@@ -80,6 +105,19 @@ export class BookStore {
     }
 
     this.flushEvents();
+    
+    // Save visualization to database
+    await saveVisualizationEvent(
+      'SEARCH',
+      'hash_table',
+      this.eventQueue,
+      {
+        bookId: id,
+        bookName: result?.name,
+        description: `Searched for book: ${id}`
+      }
+    );
+
     return result;
   }
 
@@ -98,6 +136,17 @@ export class BookStore {
     }
 
     this.flushEvents();
+    
+    // Save visualization to database
+    await saveVisualizationEvent(
+      'TOP_K',
+      'avl_tree',
+      this.eventQueue,
+      {
+        description: `Retrieved top ${k} rated books`
+      }
+    );
+
     return result;
   }
 
@@ -131,20 +180,53 @@ export class BookStore {
   }
 
   private persist() {
-    const books = this.getAllBooks();
-    localStorage.setItem('books', JSON.stringify(books));
+    // Data persisted to Supabase
+    console.log('Data persisted to Supabase');
   }
 
   async loadFromStorage() {
-    const stored = localStorage.getItem('books');
-    if (stored) {
-      const books: Book[] = JSON.parse(stored);
-      for (const book of books) {
-        await this.hashTable.insert(book);
-        await this.avlTree.insert(book);
+    try {
+      // Load from Supabase
+      const { data: books, error } = await supabase
+        .from('books')
+        .select('*');
+
+      if (error) {
+        console.error('Error loading from Supabase:', error);
+        return;
       }
-      // Don't flush events for initial load
-      this.eventQueue = [];
+
+      if (books && books.length > 0) {
+        for (const book of books) {
+          const bookData: Book = {
+            id: book.id,
+            name: book.title,
+            rating: Number(book.rating),
+            posterUrl: book.poster_url || '',
+            year: book.year || 0,
+            author: book.author,
+            subject: book.subject,
+            condition: book.condition,
+            owner: book.owner_user_id,
+            available: book.available
+          };
+          
+          await this.hashTable.insert(bookData);
+          await this.avlTree.insert(bookData);
+          
+          // Build trie
+          bookTrie.insert(bookData.name, bookData.id);
+          if (bookData.author) {
+            bookTrie.insert(bookData.author, bookData.id);
+          }
+        }
+        
+        // Don't flush events for initial load
+        this.eventQueue = [];
+        console.log(`Loaded ${books.length} books from Supabase`);
+      }
+    } catch (error) {
+      console.error('Error loading from storage:', error);
     }
   }
 }

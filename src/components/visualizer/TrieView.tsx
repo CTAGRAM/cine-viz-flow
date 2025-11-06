@@ -7,7 +7,7 @@ import { ZoomIn, ZoomOut, Maximize2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 
 interface TrieViewProps {
-  events: TrieVisualizationEvent[];
+  events: any[];
 }
 
 interface TrieNodeViz {

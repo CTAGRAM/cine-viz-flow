@@ -5,7 +5,7 @@ import { Badge } from '@/components/ui/badge';
 import { ArrowRight } from 'lucide-react';
 
 interface QueueViewProps {
-  events: QueueVisualizationEvent[];
+  events: any[];
   queueItems: any[];
 }
 

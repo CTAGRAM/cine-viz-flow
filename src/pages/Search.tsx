@@ -1,13 +1,16 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Search as SearchIcon, Eye } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { BookCard } from '@/components/BookCard';
 import { bookStore } from '@/lib/bookStore';
+import { bookTrie } from '@/lib/trieDataStructure';
 import { Book } from '@/lib/dataStructures';
 import { useToast } from '@/hooks/use-toast';
 import { Slider } from '@/components/ui/slider';
 import { useNavigate } from 'react-router-dom';
+import { Badge } from '@/components/ui/badge';
+import { ScrollArea } from '@/components/ui/scroll-area';
 
 export default function Search() {
   const [searchQuery, setSearchQuery] = useState('');
@@ -15,34 +18,65 @@ export default function Search() {
   const [minRating, setMinRating] = useState(0);
   const [maxRating, setMaxRating] = useState(10);
   const [foundInBucket, setFoundInBucket] = useState<number | null>(null);
+  const [suggestions, setSuggestions] = useState<string[]>([]);
+  const [showSuggestions, setShowSuggestions] = useState(false);
   const { toast } = useToast();
   const navigate = useNavigate();
 
-  const handleSearch = async () => {
-    if (!searchQuery.trim()) {
+  // Load books into trie on mount
+  useEffect(() => {
+    const allBooks = bookStore.getAllBooks();
+    bookTrie.buildFromBooks(allBooks);
+  }, []);
+
+  // Handle search query changes for autocomplete
+  const handleQueryChange = (value: string) => {
+    setSearchQuery(value);
+    
+    if (value.trim().length >= 2) {
+      const matches = bookTrie.search(value.trim());
+      setSuggestions(matches.slice(0, 10));
+      setShowSuggestions(true);
+    } else {
+      setSuggestions([]);
+      setShowSuggestions(false);
+    }
+  };
+
+  const selectSuggestion = (suggestion: string) => {
+    setSearchQuery(suggestion);
+    setShowSuggestions(false);
+    handleSearch(suggestion);
+  };
+
+  const handleSearch = async (query?: string) => {
+    const searchTerm = query || searchQuery;
+    
+    if (!searchTerm.trim()) {
       toast({
         title: "Enter a search query",
-        description: "Please enter a movie ID or title to search",
+        description: "Please enter a book ID or title to search",
         variant: "destructive"
       });
       return;
     }
 
-    // Try exact ID search first
-    const exactMatch = await bookStore.searchBook(searchQuery.trim());
+    // Try exact ID search first via Hash Table
+    const exactMatch = await bookStore.searchBook(searchTerm.trim());
     
     if (exactMatch) {
-      setFoundInBucket(0); // Mark as found via hash table
+      setFoundInBucket(0);
       setResults([exactMatch]);
       toast({
         title: "Book found! 📚",
         description: `Found "${exactMatch.name}" via Hash Table lookup`
       });
     } else {
-      // Fallback to title search
+      // Fallback to title search using Trie
+      const bookIds = bookTrie.searchBookIds(searchTerm.trim());
       const allBooks = bookStore.getAllBooks();
       const filtered = allBooks.filter(book =>
-        book.name.toLowerCase().includes(searchQuery.toLowerCase()) &&
+        bookIds.includes(book.id) &&
         book.rating >= minRating &&
         book.rating <= maxRating
       );
@@ -59,10 +93,11 @@ export default function Search() {
       } else {
         toast({
           title: `Found ${filtered.length} book${filtered.length > 1 ? 's' : ''}`,
-          description: "Results filtered by title and rating"
+          description: "Results found using Trie search"
         });
       }
     }
+    setShowSuggestions(false);
   };
 
   return (
@@ -76,16 +111,46 @@ export default function Search() {
           </p>
         </div>
 
-        {/* Search Bar */}
-        <div className="flex gap-4">
-        <Input
-          placeholder="Enter ISBN or Book Title..."
-          value={searchQuery}
-          onChange={(e) => setSearchQuery(e.target.value)}
-          onKeyDown={(e) => e.key === 'Enter' && handleSearch()}
-          className="text-lg h-14"
-        />
-          <Button onClick={handleSearch} size="lg" className="px-8">
+        {/* Search Bar with Autocomplete */}
+        <div className="relative flex gap-4">
+          <div className="flex-1 relative">
+            <Input
+              placeholder="Enter ISBN or Book Title..."
+              value={searchQuery}
+              onChange={(e) => handleQueryChange(e.target.value)}
+              onKeyDown={(e) => e.key === 'Enter' && handleSearch()}
+              onFocus={() => suggestions.length > 0 && setShowSuggestions(true)}
+              className="text-lg h-14"
+            />
+            
+            {/* Autocomplete Suggestions */}
+            {showSuggestions && suggestions.length > 0 && (
+              <div className="absolute top-full mt-2 w-full bg-card border rounded-lg shadow-lg z-10 max-h-[300px] overflow-hidden">
+                <ScrollArea className="h-full max-h-[300px]">
+                  <div className="p-2">
+                    <div className="text-xs text-muted-foreground px-3 py-2 font-semibold">
+                      Suggestions from Trie
+                    </div>
+                    {suggestions.map((suggestion, i) => (
+                      <button
+                        key={i}
+                        className="w-full text-left px-3 py-2 hover:bg-muted rounded-md transition-colors"
+                        onClick={() => selectSuggestion(suggestion)}
+                      >
+                        <div className="flex items-center justify-between">
+                          <span>{suggestion}</span>
+                          <Badge variant="outline" className="text-xs">
+                            Match
+                          </Badge>
+                        </div>
+                      </button>
+                    ))}
+                  </div>
+                </ScrollArea>
+              </div>
+            )}
+          </div>
+          <Button onClick={() => handleSearch()} size="lg" className="px-8">
             <SearchIcon className="h-5 w-5 mr-2" />
             Search
           </Button>

@@ -7,7 +7,7 @@ import { ZoomIn, ZoomOut, Maximize2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 
 interface GraphViewProps {
-  events: GraphVisualizationEvent[];
+  events: any[];
   nodes: GraphNode[];
   edges: GraphEdge[];
 }

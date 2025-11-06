@@ -8,6 +8,8 @@ import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { toast } from "sonner";
 import { ArrowLeft, BookOpen } from "lucide-react";
+import { bookStore } from "@/lib/bookStore";
+import { Book } from "@/lib/dataStructures";
 
 const RANDOM_BOOKS = [
   { id: 'isbn-978-0262033848', name: 'Introduction to Algorithms', author: 'Cormen, Leiserson, Rivest, Stein', rating: 9.5, subject: 'Computer Science', condition: 'New', posterUrl: 'https://mitpress.mit.edu/9780262046305/introduction-to-algorithms/', year: 2009, owner: 'Random User', available: true },
@@ -116,14 +118,44 @@ export default function AddBook() {
           .eq('owner_user_id', user.id);
 
         if (error) throw error;
-        toast.success("Book updated successfully!");
+        
+        // Trigger visualization for update
+        await bookStore.addBook({
+          id: formData.id,
+          name: formData.name,
+          author: formData.author,
+          rating,
+          subject: formData.subject || '',
+          condition: formData.condition || '',
+          posterUrl: formData.posterUrl || '',
+          year: formData.year ? parseInt(formData.year) : 0,
+          owner: user.id,
+          available: true
+        });
+        
+        toast.success("Book updated successfully! Check the visualizer to see the operation.");
       } else {
         const { error } = await supabase
           .from('books')
           .insert(bookData);
 
         if (error) throw error;
-        toast.success("Book listed successfully!");
+        
+        // Trigger visualization for new book
+        await bookStore.addBook({
+          id: formData.id,
+          name: formData.name,
+          author: formData.author,
+          rating,
+          subject: formData.subject || '',
+          condition: formData.condition || '',
+          posterUrl: formData.posterUrl || '',
+          year: formData.year ? parseInt(formData.year) : 0,
+          owner: user.id,
+          available: true
+        });
+        
+        toast.success("Book listed successfully! Check the visualizer to see the operation.");
       }
 
       navigate("/");
