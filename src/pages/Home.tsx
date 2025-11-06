@@ -5,6 +5,12 @@ import { BookCard } from "@/components/BookCard";
 import { BookOpen, Info, ChevronRight } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import heroImage from "@/assets/hero-placeholder.jpg";
+import effectiveJava from "@/assets/books/effective-java.jpg";
+import introAlgorithms from "@/assets/books/intro-algorithms.jpg";
+import cleanCode from "@/assets/books/clean-code.jpg";
+import linearAlgebra from "@/assets/books/linear-algebra.jpg";
+import physicsSerway from "@/assets/books/physics-serway.jpg";
+import thomasCalculus from "@/assets/books/thomas-calculus.jpg";
 
 // Sample books for demo - diverse academic books
 const SAMPLE_DATA_VERSION = '3.0'; // Book exchange version
@@ -17,7 +23,7 @@ const sampleBooks: Book[] = [
     subject: "Computer Science",
     condition: "Good",
     year: 2018,
-    posterUrl: "https://images-na.ssl-images-amazon.com/images/I/71F8H2-5-nL.jpg",
+    posterUrl: effectiveJava,
     owner: "Student A",
     available: true
   },
@@ -29,7 +35,7 @@ const sampleBooks: Book[] = [
     subject: "Computer Science",
     condition: "New",
     year: 2009,
-    posterUrl: "https://mitpress.mit.edu/9780262046305/introduction-to-algorithms/",
+    posterUrl: introAlgorithms,
     owner: "Student B",
     available: true
   },
@@ -41,7 +47,7 @@ const sampleBooks: Book[] = [
     subject: "Computer Science",
     condition: "Good",
     year: 2008,
-    posterUrl: "https://m.media-amazon.com/images/I/51E2055ZGUL.jpg",
+    posterUrl: cleanCode,
     owner: "Student C",
     available: true
   },
@@ -53,7 +59,7 @@ const sampleBooks: Book[] = [
     subject: "Mathematics",
     condition: "Fair",
     year: 2015,
-    posterUrl: "https://m.media-amazon.com/images/I/51Dc8dGRUSL.jpg",
+    posterUrl: linearAlgebra,
     owner: "Student D",
     available: true
   },
@@ -65,7 +71,7 @@ const sampleBooks: Book[] = [
     subject: "Physics",
     condition: "Good",
     year: 2014,
-    posterUrl: "https://m.media-amazon.com/images/I/51RXZ9YGNVL.jpg",
+    posterUrl: physicsSerway,
     owner: "Student E",
     available: false
   },
@@ -77,7 +83,7 @@ const sampleBooks: Book[] = [
     subject: "Mathematics",
     condition: "Good",
     year: 2013,
-    posterUrl: "https://m.media-amazon.com/images/I/51NQJMS5VBL.jpg",
+    posterUrl: thomasCalculus,
     owner: "Student F",
     available: true
   },
