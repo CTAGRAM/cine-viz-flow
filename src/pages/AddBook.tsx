@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
-import { movieStore } from "@/lib/movieStore";
+import { bookStore as movieStore } from "@/lib/bookStore";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -45,19 +45,19 @@ export default function AddMovie() {
 
   useEffect(() => {
     if (editId) {
-      const loadMovie = async () => {
-        const movie = await movieStore.searchMovie(editId);
-        if (movie) {
+      const loadBook = async () => {
+        const book = await movieStore.searchBook(editId);
+        if (book) {
           setFormData({
-            id: movie.id,
-            name: movie.name,
-            rating: movie.rating.toString(),
-            posterUrl: movie.posterUrl || "",
-            year: movie.year?.toString() || "",
+            id: book.id,
+            name: book.name,
+            rating: book.rating.toString(),
+            posterUrl: book.posterUrl || "",
+            year: book.year?.toString() || "",
           });
         }
       };
-      loadMovie();
+      loadBook();
     }
   }, [editId]);
 
@@ -86,7 +86,7 @@ export default function AddMovie() {
       return;
     }
 
-    await movieStore.addMovie({
+    await movieStore.addBook({
       id: formData.id,
       name: formData.name,
       rating,

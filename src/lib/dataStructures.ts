@@ -1,15 +1,23 @@
 // Data Structures with Visualization Events
 
-export interface Movie {
-  id: string;
-  name: string;
-  rating: number;
-  posterUrl?: string;
-  year?: number;
+export interface Book {
+  id: string; // ISBN or unique book ID
+  name: string; // Book title
+  rating: number; // Quality/condition score
+  posterUrl?: string; // Book cover URL → "coverUrl" semantically
+  year?: number; // Publication year
+  author?: string; // Book author
+  subject?: string; // Subject/category (CS, Math, Physics, etc.)
+  condition?: string; // Book condition (New, Good, Fair, Poor)
+  owner?: string; // Student who owns/offers the book
+  available?: boolean; // Availability status
 }
 
+// Legacy alias for backward compatibility during transition
+export type Movie = Book;
+
 export type VisualizationEvent = 
-  | { type: 'hash-probe'; bucket: number; movieId: string }
+  | { type: 'hash-probe'; bucket: number; movieId: string } // kept as movieId for compatibility
   | { type: 'hash-chain-compare'; bucket: number; index: number; movieId: string; match: boolean }
   | { type: 'hash-insert'; bucket: number; movieId: string }
   | { type: 'hash-update'; bucket: number; movieId: string }
@@ -27,7 +35,7 @@ export type EventListener = (event: VisualizationEvent) => void;
 
 // Hash Table with Separate Chaining
 export class HashTable {
-  private buckets: Movie[][];
+  private buckets: Book[][];
   private capacity: number;
   private size: number;
   private loadFactorThreshold = 0.75;
@@ -84,26 +92,26 @@ export class HashTable {
     this.emit({ type: 'hash-resize-complete' });
   }
 
-  async insert(movie: Movie): Promise<void> {
-    const bucket = this.hash(movie.id);
-    this.emit({ type: 'hash-probe', bucket, movieId: movie.id });
+  async insert(book: Book): Promise<void> {
+    const bucket = this.hash(book.id);
+    this.emit({ type: 'hash-probe', bucket, movieId: book.id });
 
     const chain = this.buckets[bucket];
     
     // Check if exists
     for (let i = 0; i < chain.length; i++) {
-      this.emit({ type: 'hash-chain-compare', bucket, index: i, movieId: movie.id, match: chain[i].id === movie.id });
-      if (chain[i].id === movie.id) {
-        chain[i] = movie; // Update
-        this.emit({ type: 'hash-update', bucket, movieId: movie.id });
+      this.emit({ type: 'hash-chain-compare', bucket, index: i, movieId: book.id, match: chain[i].id === book.id });
+      if (chain[i].id === book.id) {
+        chain[i] = book; // Update
+        this.emit({ type: 'hash-update', bucket, movieId: book.id });
         return;
       }
     }
 
     // Insert new
-    chain.push(movie);
+    chain.push(book);
     this.size++;
-    this.emit({ type: 'hash-insert', bucket, movieId: movie.id });
+    this.emit({ type: 'hash-insert', bucket, movieId: book.id });
 
     // Check load factor
     if (this.size / this.capacity > this.loadFactorThreshold) {
@@ -111,15 +119,15 @@ export class HashTable {
     }
   }
 
-  async search(movieId: string): Promise<Movie | null> {
-    const bucket = this.hash(movieId);
-    this.emit({ type: 'hash-probe', bucket, movieId });
+  async search(bookId: string): Promise<Book | null> {
+    const bucket = this.hash(bookId);
+    this.emit({ type: 'hash-probe', bucket, movieId: bookId });
 
     const chain = this.buckets[bucket];
     
     for (let i = 0; i < chain.length; i++) {
-      const match = chain[i].id === movieId;
-      this.emit({ type: 'hash-chain-compare', bucket, index: i, movieId, match });
+      const match = chain[i].id === bookId;
+      this.emit({ type: 'hash-chain-compare', bucket, index: i, movieId: bookId, match });
       if (match) {
         return chain[i];
       }
@@ -128,7 +136,7 @@ export class HashTable {
     return null;
   }
 
-  getBuckets(): Movie[][] {
+  getBuckets(): Book[][] {
     return this.buckets;
   }
 
@@ -144,14 +152,14 @@ export class HashTable {
 
 // AVL Tree Node
 class AVLNode {
-  movie: Movie;
+  movie: Book; // Using movie property name for backward compatibility
   left: AVLNode | null = null;
   right: AVLNode | null = null;
   height: number = 1;
   size: number = 1; // Subtree size
 
-  constructor(movie: Movie) {
-    this.movie = movie;
+  constructor(book: Book) {
+    this.movie = book;
   }
 
   get balance(): number {
@@ -186,7 +194,7 @@ export class AVLTree {
   }
 
   // Compare: rating DESC, then id ASC
-  private compare(a: Movie, b: Movie): number {
+  private compare(a: Book, b: Book): number {
     if (a.rating !== b.rating) {
       return b.rating - a.rating; // Higher rating first
     }
@@ -229,28 +237,28 @@ export class AVLTree {
     return y;
   }
 
-  async insert(movie: Movie): Promise<void> {
-    this.root = await this.insertNode(this.root, movie);
+  async insert(book: Book): Promise<void> {
+    this.root = await this.insertNode(this.root, book);
   }
 
-  private async insertNode(node: AVLNode | null, movie: Movie): Promise<AVLNode> {
+  private async insertNode(node: AVLNode | null, book: Book): Promise<AVLNode> {
     // Standard BST insertion
     if (!node) {
-      this.emit({ type: 'avl-insert', nodeId: movie.id, rating: movie.rating });
-      return new AVLNode(movie);
+      this.emit({ type: 'avl-insert', nodeId: book.id, rating: book.rating });
+      return new AVLNode(book);
     }
 
     this.emit({ type: 'avl-visit', nodeId: node.movie.id, rating: node.movie.rating, purpose: 'insert' });
 
-    const cmp = this.compare(movie, node.movie);
+    const cmp = this.compare(book, node.movie);
     
     if (cmp < 0) {
-      node.left = await this.insertNode(node.left, movie);
+      node.left = await this.insertNode(node.left, book);
     } else if (cmp > 0) {
-      node.right = await this.insertNode(node.right, movie);
+      node.right = await this.insertNode(node.right, book);
     } else {
       // Duplicate - update
-      node.movie = movie;
+      node.movie = book;
       return node;
     }
 
@@ -262,24 +270,24 @@ export class AVLTree {
     const balance = node.balance;
 
     // LL
-    if (balance > 1 && node.left && this.compare(movie, node.left.movie) < 0) {
+    if (balance > 1 && node.left && this.compare(book, node.left.movie) < 0) {
       return this.rotateRight(node);
     }
 
     // RR
-    if (balance < -1 && node.right && this.compare(movie, node.right.movie) > 0) {
+    if (balance < -1 && node.right && this.compare(book, node.right.movie) > 0) {
       return this.rotateLeft(node);
     }
 
     // LR
-    if (balance > 1 && node.left && this.compare(movie, node.left.movie) > 0) {
+    if (balance > 1 && node.left && this.compare(book, node.left.movie) > 0) {
       this.emit({ type: 'avl-rotate', rotationType: 'LR', pivotId: node.movie.id });
       node.left = this.rotateLeft(node.left);
       return this.rotateRight(node);
     }
 
     // RL
-    if (balance < -1 && node.right && this.compare(movie, node.right.movie) < 0) {
+    if (balance < -1 && node.right && this.compare(book, node.right.movie) < 0) {
       this.emit({ type: 'avl-rotate', rotationType: 'RL', pivotId: node.movie.id });
       node.right = this.rotateRight(node.right);
       return this.rotateLeft(node);
@@ -288,16 +296,16 @@ export class AVLTree {
     return node;
   }
 
-  async delete(movieId: string): Promise<void> {
-    this.root = await this.deleteNode(this.root, movieId);
+  async delete(bookId: string): Promise<void> {
+    this.root = await this.deleteNode(this.root, bookId);
   }
 
-  private async deleteNode(node: AVLNode | null, movieId: string): Promise<AVLNode | null> {
+  private async deleteNode(node: AVLNode | null, bookId: string): Promise<AVLNode | null> {
     if (!node) return null;
 
     this.emit({ type: 'avl-visit', nodeId: node.movie.id, rating: node.movie.rating, purpose: 'delete' });
 
-    if (movieId === node.movie.id) {
+    if (bookId === node.movie.id) {
       this.emit({ type: 'avl-delete', nodeId: node.movie.id, rating: node.movie.rating });
 
       // Node with only one child or no child
@@ -309,10 +317,10 @@ export class AVLTree {
       const temp = this.minValueNode(node.right);
       node.movie = temp.movie;
       node.right = await this.deleteNode(node.right, temp.movie.id);
-    } else if (movieId < node.movie.id) {
-      node.left = await this.deleteNode(node.left, movieId);
+    } else if (bookId < node.movie.id) {
+      node.left = await this.deleteNode(node.left, bookId);
     } else {
-      node.right = await this.deleteNode(node.right, movieId);
+      node.right = await this.deleteNode(node.right, bookId);
     }
 
     node.updateMetrics();
@@ -353,8 +361,8 @@ export class AVLTree {
   }
 
   // Top-k: Reverse in-order traversal (Right -> Node -> Left)
-  async topRated(k: number): Promise<Movie[]> {
-    const result: Movie[] = [];
+  async topRated(k: number): Promise<Book[]> {
+    const result: Book[] = [];
     let rank = 1;
     
     const traverse = (node: AVLNode | null) => {
@@ -378,14 +386,14 @@ export class AVLTree {
     return result;
   }
 
-  search(movieId: string): Movie | null {
+  search(bookId: string): Book | null {
     let current = this.root;
     while (current) {
       this.emit({ type: 'avl-visit', nodeId: current.movie.id, rating: current.movie.rating, purpose: 'search' });
-      if (current.movie.id === movieId) {
+      if (current.movie.id === bookId) {
         return current.movie;
       }
-      current = movieId < current.movie.id ? current.left : current.right;
+      current = bookId < current.movie.id ? current.left : current.right;
     }
     return null;
   }
@@ -394,8 +402,8 @@ export class AVLTree {
     return this.root;
   }
 
-  toArray(): Movie[] {
-    const result: Movie[] = [];
+  toArray(): Book[] {
+    const result: Book[] = [];
     const traverse = (node: AVLNode | null) => {
       if (!node) return;
       traverse(node.right);

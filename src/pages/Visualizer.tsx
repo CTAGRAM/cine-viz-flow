@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { movieStore } from '@/lib/movieStore';
+import { bookStore as movieStore } from '@/lib/bookStore';
 import { visualizationEngine } from '@/lib/visualizationEngine';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Button } from '@/components/ui/button';

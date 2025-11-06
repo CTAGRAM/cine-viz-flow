@@ -1,12 +1,12 @@
 import { useEffect, useState } from 'react';
-import { MovieCard } from '@/components/MovieCard';
-import { Movie } from '@/lib/dataStructures';
+import { BookCard } from '@/components/BookCard';
+import { Book } from '@/lib/dataStructures';
 import { Button } from '@/components/ui/button';
 import { Trash2 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 
 export default function MyList() {
-  const [myList, setMyList] = useState<Movie[]>([]);
+  const [myList, setMyList] = useState<Book[]>([]);
   const { toast } = useToast();
 
   useEffect(() => {
@@ -69,14 +69,14 @@ export default function MyList() {
         {/* Movie Grid */}
         {myList.length > 0 ? (
           <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-4">
-            {myList.map((movie) => (
-              <div key={movie.id} className="relative group">
-                <MovieCard movie={movie} />
+            {myList.map((book) => (
+              <div key={book.id} className="relative group">
+                <BookCard book={book} />
                 <Button
                   variant="destructive"
                   size="sm"
                   className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity"
-                  onClick={() => removeFromList(movie.id)}
+                  onClick={() => removeFromList(book.id)}
                 >
                   <Trash2 className="h-3 w-3" />
                 </Button>

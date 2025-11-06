@@ -1,14 +1,14 @@
 import { useEffect, useState } from "react";
-import { Movie } from "@/lib/dataStructures";
-import { movieStore } from "@/lib/movieStore";
-import { MovieCard } from "@/components/MovieCard";
-import { Play, Info, ChevronRight } from "lucide-react";
+import { Book } from "@/lib/dataStructures";
+import { bookStore } from "@/lib/bookStore";
+import { BookCard } from "@/components/BookCard";
+import { BookOpen, Info, ChevronRight } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import heroImage from "@/assets/hero-placeholder.jpg";
 
-// Sample movies for demo - 6 popular Indian movies
-const SAMPLE_DATA_VERSION = '2.0'; // Indian movies version
-const sampleMovies: Movie[] = [
+// Sample books for demo - diverse academic books
+const SAMPLE_DATA_VERSION = '3.0'; // Book exchange version
+const sampleBooks: Book[] = [
   { 
     id: "tt1187043", 
     name: "3 Idiots", 
@@ -54,9 +54,9 @@ const sampleMovies: Movie[] = [
 ];
 
 export default function Home() {
-  const [movies, setMovies] = useState<Movie[]>([]);
-  const [topRated, setTopRated] = useState<Movie[]>([]);
-  const [hero, setHero] = useState<Movie | null>(null);
+  const [books, setBooks] = useState<Book[]>([]);
+  const [topRated, setTopRated] = useState<Book[]>([]);
+  const [hero, setHero] = useState<Book | null>(null);
   const [currentHeroIndex, setCurrentHeroIndex] = useState(0);
 
   useEffect(() => {
@@ -69,12 +69,12 @@ export default function Home() {
       
       if (needsVersionUpdate) {
         console.log(`Version mismatch (${currentVersion} -> ${SAMPLE_DATA_VERSION}). Clearing old data...`);
-        movieStore.clearAll();
+        bookStore.clearAll();
       } else {
-        await movieStore.loadFromStorage();
+        await bookStore.loadFromStorage();
       }
       
-      let allMovies = movieStore.getAllMovies();
+      let allBooks = bookStore.getAllBooks();
       console.log('Movies from storage:', allMovies.length);
 
       // Check if we need to load sample movies
@@ -83,21 +83,21 @@ export default function Home() {
       console.log('Needs sample data?', needsSampleData);
 
       if (needsSampleData) {
-        console.log('Loading 6 Indian sample movies...');
-        // Load sample movies with poster URLs
-        for (const movie of sampleMovies) {
-          await movieStore.addMovie(movie);
+        console.log('Loading sample books...');
+        // Load sample books
+        for (const book of sampleBooks) {
+          await bookStore.addBook(book);
         }
-        allMovies = movieStore.getAllMovies();
+        allBooks = bookStore.getAllBooks();
         console.log('After loading samples:', allMovies.length);
         
         // Save version
         localStorage.setItem('movieDataVersion', SAMPLE_DATA_VERSION);
       }
 
-      setMovies(allMovies);
+      setBooks(allBooks);
 
-      const top = await movieStore.topRated(10);
+      const top = await bookStore.topRated(10);
       setTopRated(top);
       console.log('Top rated movies:', top.length);
 
@@ -195,8 +195,8 @@ export default function Home() {
 
                 <div className="flex gap-3 pt-4">
                   <Button size="lg" className="gap-2 bg-primary hover:bg-primary/90 text-primary-foreground px-8">
-                    <Play className="w-5 h-5 fill-current" />
-                    Play
+                  <BookOpen className="w-5 h-5" />
+                  Request
                   </Button>
                   <Button size="lg" variant="secondary" className="gap-2 bg-white/20 hover:bg-white/30 text-white backdrop-blur-sm">
                     <Info className="w-5 h-5" />
@@ -229,9 +229,9 @@ export default function Home() {
                 id="top-rated-carousel"
                 className="flex gap-3 overflow-x-auto scrollbar-hide scroll-smooth snap-x snap-mandatory pb-2"
               >
-                {topRated.map((movie) => (
-                  <div key={movie.id} className="flex-none w-48 snap-start">
-                    <MovieCard movie={movie} />
+                {topRated.map((book) => (
+                  <div key={book.id} className="flex-none w-48 snap-start">
+                    <BookCard book={book} />
                   </div>
                 ))}
               </div>
@@ -240,7 +240,7 @@ export default function Home() {
         )}
 
         {/* Recently Added */}
-        {movies.length > 0 && (
+        {books.length > 0 && (
           <section>
             <div className="flex items-center justify-between mb-4">
               <h2 className="text-2xl font-bold">Recently Added</h2>
@@ -251,9 +251,9 @@ export default function Home() {
             </div>
             <div className="relative group">
               <div className="flex gap-3 overflow-x-auto scrollbar-hide scroll-smooth snap-x snap-mandatory pb-2">
-                {movies.slice(0, 12).reverse().map((movie) => (
-                  <div key={movie.id} className="flex-none w-48 snap-start">
-                    <MovieCard movie={movie} />
+                {books.slice(0, 12).reverse().map((book) => (
+                  <div key={book.id} className="flex-none w-48 snap-start">
+                    <BookCard book={book} />
                   </div>
                 ))}
               </div>
@@ -262,20 +262,20 @@ export default function Home() {
         )}
 
         {/* All Movies */}
-        {movies.length > 0 && (
+        {books.length > 0 && (
           <section>
             <div className="flex items-center justify-between mb-4">
               <h2 className="text-2xl font-bold">Browse All</h2>
             </div>
             <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-3">
-              {movies.slice(0, 18).map((movie) => (
-                <MovieCard key={movie.id} movie={movie} />
+              {books.slice(0, 18).map((book) => (
+                <BookCard key={book.id} book={book} />
               ))}
             </div>
           </section>
         )}
 
-        {movies.length === 0 && (
+        {books.length === 0 && (
           <div className="flex flex-col items-center justify-center py-24 text-center">
             <h2 className="text-3xl font-bold mb-4">No Movies Yet</h2>
             <p className="text-muted-foreground mb-8 max-w-md">

@@ -6,16 +6,16 @@ export const NavigationRail = () => {
   const links = [
     { to: "/", icon: Home, label: "Home" },
     { to: "/search", icon: Search, label: "Search" },
-    { to: "/add", icon: Plus, label: "Add Movie" },
-    { to: "/my-list", icon: Heart, label: "My List" },
+    { to: "/add", icon: Plus, label: "List a Book" },
+    { to: "/my-list", icon: Heart, label: "My Books" },
     { to: "/visualizer", icon: Layers, label: "Visualizer" },
   ];
 
   return (
     <nav className="fixed left-0 top-0 h-screen w-20 bg-sidebar border-r border-sidebar-border flex flex-col items-center py-8 gap-6 z-50">
       <div className="mb-4">
-        <div className="w-10 h-10 bg-primary rounded-md flex items-center justify-center font-bold text-xl">
-          N
+        <div className="w-10 h-10 bg-primary rounded-lg flex items-center justify-center font-display font-bold text-xl text-primary-foreground">
+          📚
         </div>
       </div>
       

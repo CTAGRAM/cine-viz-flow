@@ -2,16 +2,16 @@ import { useState } from 'react';
 import { Search as SearchIcon, Eye } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
-import { MovieCard } from '@/components/MovieCard';
-import { movieStore } from '@/lib/movieStore';
-import { Movie } from '@/lib/dataStructures';
+import { BookCard } from '@/components/BookCard';
+import { bookStore } from '@/lib/bookStore';
+import { Book } from '@/lib/dataStructures';
 import { useToast } from '@/hooks/use-toast';
 import { Slider } from '@/components/ui/slider';
 import { useNavigate } from 'react-router-dom';
 
 export default function Search() {
   const [searchQuery, setSearchQuery] = useState('');
-  const [results, setResults] = useState<Movie[]>([]);
+  const [results, setResults] = useState<Book[]>([]);
   const [minRating, setMinRating] = useState(0);
   const [maxRating, setMaxRating] = useState(10);
   const [foundInBucket, setFoundInBucket] = useState<number | null>(null);
@@ -29,7 +29,7 @@ export default function Search() {
     }
 
     // Try exact ID search first
-    const exactMatch = await movieStore.searchMovie(searchQuery.trim());
+    const exactMatch = await bookStore.searchBook(searchQuery.trim());
     
     if (exactMatch) {
       setFoundInBucket(0); // Mark as found via hash table
@@ -40,11 +40,11 @@ export default function Search() {
       });
     } else {
       // Fallback to title search
-      const allMovies = movieStore.getAllMovies();
-      const filtered = allMovies.filter(movie => 
-        movie.name.toLowerCase().includes(searchQuery.toLowerCase()) &&
-        movie.rating >= minRating &&
-        movie.rating <= maxRating
+      const allBooks = bookStore.getAllBooks();
+      const filtered = allBooks.filter(book =>
+        book.name.toLowerCase().includes(searchQuery.toLowerCase()) &&
+        book.rating >= minRating &&
+        book.rating <= maxRating
       );
       
       setFoundInBucket(null);
@@ -146,8 +146,8 @@ export default function Search() {
               </div>
             )}
             <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-4">
-              {results.map((movie) => (
-                <MovieCard key={movie.id} movie={movie} />
+              {results.map((book) => (
+                <BookCard key={book.id} book={book} />
               ))}
             </div>
           </div>
