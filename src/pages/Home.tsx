@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { useLocation } from "react-router-dom";
 import { Book } from "@/lib/dataStructures";
 import { bookStore } from "@/lib/bookStore";
 import { BookCard } from "@/components/BookCard";
@@ -90,6 +91,7 @@ const sampleBooks: Book[] = [
 ];
 
 export default function Home() {
+  const location = useLocation();
   const [books, setBooks] = useState<Book[]>([]);
   const [topRated, setTopRated] = useState<Book[]>([]);
   const [hero, setHero] = useState<Book | null>(null);
@@ -144,7 +146,7 @@ export default function Home() {
     };
 
     loadBooks();
-  }, []);
+  }, [location]);
 
   // Auto-rotate hero slideshow every 5 seconds
   useEffect(() => {
