@@ -3,6 +3,7 @@ import { useLocation } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { Book } from "@/lib/dataStructures";
 import { BookCard } from "@/components/BookCard";
+import { RequestBookDialog } from "@/components/RequestBookDialog";
 import { BookOpen, Info, ChevronRight } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import heroImage from "@/assets/hero-placeholder.jpg";
@@ -12,7 +13,7 @@ export default function Home() {
   const [books, setBooks] = useState<Book[]>([]);
   const [booksWithOwner, setBooksWithOwner] = useState<{ book: Book; ownerId: string; ownerEmail: string }[]>([]);
   const [topRated, setTopRated] = useState<Book[]>([]);
-  const [hero, setHero] = useState<Book | null>(null);
+  const [hero, setHero] = useState<{ book: Book; ownerId: string; ownerEmail: string } | null>(null);
   const [currentHeroIndex, setCurrentHeroIndex] = useState(0);
   const [loading, setLoading] = useState(true);
 
@@ -70,7 +71,8 @@ export default function Home() {
         setTopRated(topBooks);
 
         if (topBooks.length > 0) {
-          setHero(topBooks[0]);
+          const heroBook = booksWithOwnerData.find(b => b.book.id === topBooks[0].id);
+          if (heroBook) setHero(heroBook);
         }
       } catch (error) {
         console.error('Error loading books:', error);
@@ -95,10 +97,11 @@ export default function Home() {
 
   // Update hero when index changes
   useEffect(() => {
-    if (topRated.length > 0) {
-      setHero(topRated[currentHeroIndex]);
+    if (topRated.length > 0 && booksWithOwner.length > 0) {
+      const heroBook = booksWithOwner.find(b => b.book.id === topRated[currentHeroIndex].id);
+      if (heroBook) setHero(heroBook);
     }
-  }, [currentHeroIndex, topRated]);
+  }, [currentHeroIndex, topRated, booksWithOwner]);
 
   const scrollContainer = (direction: 'left' | 'right', containerId: string) => {
     const container = document.getElementById(containerId);
@@ -124,9 +127,9 @@ export default function Home() {
           {/* Background with poster */}
           <div className="absolute inset-0">
             <img
-              key={hero.id}
-              src={hero.posterUrl || heroImage}
-              alt={hero.name}
+              key={hero.book.id}
+              src={hero.book.posterUrl || heroImage}
+              alt={hero.book.name}
               className="w-full h-full object-cover animate-fade-in"
             />
             <div className="absolute inset-0 bg-gradient-to-r from-background via-background/60 to-transparent" />
@@ -153,35 +156,35 @@ export default function Home() {
 
             {/* Bottom content */}
             <div className="max-w-2xl">
-              <div key={hero.id} className="space-y-4 animate-slide-up">
+              <div key={hero.book.id} className="space-y-4 animate-slide-up">
                 <div className="flex items-center gap-2 text-sm">
                   <div className="px-2 py-1 bg-primary text-primary-foreground rounded font-display">📚</div>
                   <span className="text-foreground/70">AVAILABLE NOW</span>
                 </div>
 
-                <h1 className="text-6xl font-display font-bold tracking-tight">{hero.name}</h1>
+                <h1 className="text-6xl font-display font-bold tracking-tight">{hero.book.name}</h1>
                 
-                {hero.author && (
-                  <p className="text-xl italic text-foreground/80">by {hero.author}</p>
+                {hero.book.author && (
+                  <p className="text-xl italic text-foreground/80">by {hero.book.author}</p>
                 )}
 
                 <div className="flex items-center gap-4 text-sm flex-wrap">
                   <div className="flex items-center gap-2">
                     <div className="px-3 py-1 bg-primary text-primary-foreground rounded-lg font-bold">
-                      ⭐ {hero.rating}/10
+                      ⭐ {hero.book.rating}/5
                     </div>
                     <span className="font-semibold">Quality Score</span>
                   </div>
-                  {hero.subject && (
-                    <span className="px-3 py-1 bg-secondary text-secondary-foreground rounded-lg">{hero.subject}</span>
+                  {hero.book.subject && (
+                    <span className="px-3 py-1 bg-secondary text-secondary-foreground rounded-lg">{hero.book.subject}</span>
                   )}
-                  {hero.condition && (
-                    <span className="px-3 py-1 bg-accent text-accent-foreground rounded-lg">{hero.condition}</span>
+                  {hero.book.condition && (
+                    <span className="px-3 py-1 bg-accent text-accent-foreground rounded-lg">{hero.book.condition}</span>
                   )}
-                  {hero.year && (
-                    <span className="text-muted-foreground">{hero.year}</span>
+                  {hero.book.year && (
+                    <span className="text-muted-foreground">{hero.book.year}</span>
                   )}
-                  {!hero.available && (
+                  {!hero.book.available && (
                     <span className="px-3 py-1 bg-red-100 dark:bg-red-900/30 text-red-800 dark:text-red-200 rounded-lg font-semibold">
                       Reserved
                     </span>
@@ -189,11 +192,13 @@ export default function Home() {
                 </div>
 
                 <div className="flex gap-3 pt-4">
-                  {hero.available ? (
-                    <Button size="lg" className="gap-2 bg-primary hover:bg-primary/90 text-primary-foreground px-8">
-                      <BookOpen className="w-5 h-5" />
-                      Request Book
-                    </Button>
+                  {hero.book.available ? (
+                    <RequestBookDialog
+                      bookId={hero.book.id}
+                      bookTitle={hero.book.name}
+                      ownerId={hero.ownerId}
+                      ownerEmail={hero.ownerEmail}
+                    />
                   ) : (
                     <Button size="lg" disabled className="gap-2 px-8">
                       <BookOpen className="w-5 h-5" />
