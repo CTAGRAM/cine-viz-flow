@@ -9,12 +9,12 @@ import { toast } from "sonner";
 import { ArrowLeft, Dices, BookOpen } from "lucide-react";
 
 const RANDOM_BOOKS = [
-  { id: 'isbn-978-0134685991', name: 'Effective Java', author: 'Joshua Bloch', rating: 9.2, subject: 'Computer Science', condition: 'Good', posterUrl: 'https://images-na.ssl-images-amazon.com/images/I/71F8H2-5-nL.jpg', year: 2018, owner: 'Random User', available: true },
-  { id: 'isbn-978-0262033848', name: 'Introduction to Algorithms', author: 'Cormen, Leiserson', rating: 9.5, subject: 'Computer Science', condition: 'New', posterUrl: 'https://mitpress.mit.edu/9780262046305/introduction-to-algorithms/', year: 2009, owner: 'Random User', available: true },
-  { id: 'isbn-978-0132350884', name: 'Clean Code', author: 'Robert C. Martin', rating: 8.9, subject: 'Computer Science', condition: 'Good', posterUrl: 'https://m.media-amazon.com/images/I/51E2055ZGUL.jpg', year: 2008, owner: 'Random User', available: true },
-  { id: 'isbn-978-0073383095', name: 'Linear Algebra and Its Applications', author: 'David C. Lay', rating: 8.7, subject: 'Mathematics', condition: 'Fair', posterUrl: 'https://m.media-amazon.com/images/I/51Dc8dGRUSL.jpg', year: 2015, owner: 'Random User', available: true },
-  { id: 'isbn-978-0201633610', name: 'Design Patterns', author: 'Gang of Four', rating: 9.0, subject: 'Computer Science', condition: 'Good', posterUrl: 'https://images-na.ssl-images-amazon.com/images/I/51szD9HC9pL.jpg', year: 1994, owner: 'Random User', available: true },
-  { id: 'isbn-978-1292024448', name: 'Physics for Scientists', author: 'Raymond A. Serway', rating: 9.1, subject: 'Physics', condition: 'Good', posterUrl: 'https://m.media-amazon.com/images/I/51RXZ9YGNVL.jpg', year: 2014, owner: 'Random User', available: true },
+  { id: 'isbn-978-0262033848', name: 'Introduction to Algorithms', author: 'Cormen, Leiserson, Rivest, Stein', rating: 9.5, subject: 'Computer Science', condition: 'New', posterUrl: 'https://mitpress.mit.edu/9780262046305/introduction-to-algorithms/', year: 2009, owner: 'Random User', available: true },
+  { id: 'isbn-978-0321573513', name: 'Algorithms', author: 'Robert Sedgewick, Kevin Wayne', rating: 9.3, subject: 'Computer Science', condition: 'Good', posterUrl: 'https://algs4.cs.princeton.edu/cover.png', year: 2011, owner: 'Random User', available: true },
+  { id: 'isbn-978-1848000698', name: 'The Algorithm Design Manual', author: 'Steven S. Skiena', rating: 9.1, subject: 'Computer Science', condition: 'Good', posterUrl: 'https://www.algorist.com/images/adm3cover.jpg', year: 2020, owner: 'Random User', available: true },
+  { id: 'isbn-978-1617292231', name: 'Grokking Algorithms', author: 'Aditya Bhargava', rating: 8.9, subject: 'Computer Science', condition: 'New', posterUrl: 'https://images.manning.com/360/480/resize/book/2/1f8808e-1d56-40d7-96e1-7fcb5f79da93/Bhargava-Grokking-2ed-HI.png', year: 2016, owner: 'Random User', available: true },
+  { id: 'isbn-978-0984782857', name: 'Cracking the Coding Interview', author: 'Gayle Laakmann McDowell', rating: 9.0, subject: 'Computer Science', condition: 'Good', posterUrl: 'https://images-na.ssl-images-amazon.com/images/I/51l5XzLln5L.jpg', year: 2015, owner: 'Random User', available: true },
+  { id: 'isbn-978-0672324536', name: 'Data Structures and Algorithms in Java', author: 'Robert Lafore', rating: 8.7, subject: 'Computer Science', condition: 'Fair', posterUrl: 'https://m.media-amazon.com/images/I/51XJbWIhCbL.jpg', year: 2002, owner: 'Random User', available: true },
 ];
 
 export default function AddBook() {
