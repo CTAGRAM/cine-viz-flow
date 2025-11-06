@@ -11,8 +11,7 @@ import { QueueView } from '@/components/visualizer/QueueView';
 import { EventPlayer } from '@/components/visualizer/EventPlayer';
 import { OperationBanner } from '@/components/visualizer/OperationBanner';
 import { OperationHistory } from '@/components/visualizer/OperationHistory';
-import { LiveActivityFeed } from '@/components/visualizer/LiveActivityFeed';
-import { History, Plus, Activity } from 'lucide-react';
+import { History, Plus } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { AnimatePresence } from 'framer-motion';
 import { useVisualizationSync } from '@/hooks/useVisualizationSync';
@@ -25,7 +24,6 @@ export default function Visualizer() {
   const [hashBuckets, setHashBuckets] = useState(movieStore.getHashTable().getBuckets());
   const [avlRoot, setAvlRoot] = useState(movieStore.getAVLTree().getRoot());
   const [showHistory, setShowHistory] = useState(false);
-  const [showLiveActivity, setShowLiveActivity] = useState(false);
   const [history, setHistory] = useState(visualizationEngine.getHistory());
   const [graphNodes, setGraphNodes] = useState(bookExchangeGraph.getNodes());
   const [graphEdges, setGraphEdges] = useState(bookExchangeGraph.getEdges());
@@ -81,14 +79,6 @@ export default function Visualizer() {
             >
               <Plus className="h-4 w-4 mr-2" />
               List Book
-            </Button>
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() => setShowLiveActivity(!showLiveActivity)}
-            >
-              <Activity className="h-4 w-4 mr-2" />
-              Live Activity
             </Button>
             <Button
               variant="outline"
@@ -222,25 +212,6 @@ export default function Visualizer() {
             }}
             onClose={() => setShowHistory(false)}
           />
-        )}
-      </AnimatePresence>
-
-      {/* Live Activity Sidebar */}
-      <AnimatePresence>
-        {showLiveActivity && (
-          <div className="fixed right-0 top-0 h-screen w-96 bg-background border-l shadow-lg z-50 p-6 overflow-y-auto animate-slide-in-right">
-            <div className="flex items-center justify-between mb-4">
-              <h2 className="text-xl font-semibold">Live Activity</h2>
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={() => setShowLiveActivity(false)}
-              >
-                Close
-              </Button>
-            </div>
-            <LiveActivityFeed />
-          </div>
         )}
       </AnimatePresence>
     </div>

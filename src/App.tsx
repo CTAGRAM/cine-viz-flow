@@ -5,6 +5,7 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { NavigationRail } from "@/components/NavigationRail";
+import { LiveActivitySidebar } from "@/components/LiveActivitySidebar";
 import { AuthProvider } from "@/hooks/useAuth";
 import { useDataInitialization } from "@/hooks/useDataInitialization";
 import Home from "./pages/Home";
@@ -51,6 +52,7 @@ const AppContent = () => {
           <Route path="*" element={<NotFound />} />
         </Routes>
       </main>
+      <LiveActivitySidebar />
     </div>
   );
 };
