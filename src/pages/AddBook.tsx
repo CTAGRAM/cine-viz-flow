@@ -89,8 +89,8 @@ export default function AddBook() {
     }
 
     const rating = parseFloat(formData.rating);
-    if (isNaN(rating) || rating < 0 || rating > 10) {
-      toast.error("Rating must be between 0 and 10");
+    if (isNaN(rating) || rating < 0 || rating > 5) {
+      toast.error("Rating must be between 0 and 5");
       return;
     }
 
@@ -237,13 +237,13 @@ export default function AddBook() {
                   type="number"
                   step="0.1"
                   min="0"
-                  max="10"
+                  max="5"
                   value={formData.rating}
                   onChange={(e) => setFormData({ ...formData, rating: e.target.value })}
-                  placeholder="8.5"
+                  placeholder="4.5"
                   required
                 />
-                <p className="text-xs text-muted-foreground">Rating from 0.0 to 10.0</p>
+                <p className="text-xs text-muted-foreground">Rating from 0.0 to 5.0</p>
               </div>
 
               <div className="space-y-2">
