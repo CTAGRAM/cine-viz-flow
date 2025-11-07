@@ -85,10 +85,11 @@ export default function Visualizer() {
             id,
             book_id,
             created_at,
+            status,
             books!inner(title),
             profiles!book_requests_requester_user_id_fkey(full_name)
           `)
-          .eq('status', 'pending')
+          .gte('created_at', new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString())
           .order('created_at', { ascending: true });
 
         if (pendingRequests && pendingRequests.length > 0) {

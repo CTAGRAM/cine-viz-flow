@@ -63,11 +63,12 @@ const Requests = () => {
         queueEvents.push(...events);
       });
 
-      // Fetch incoming requests (requests for my books)
+      // Fetch incoming requests (requests for my books) from last 24 hours
       const { data: incomingRequests, error: incomingError } = await supabase
         .from('book_requests')
         .select('*')
         .eq('owner_user_id', user.id)
+        .gte('created_at', new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString())
         .order('created_at', { ascending: false });
 
       if (incomingError) {
@@ -109,11 +110,12 @@ const Requests = () => {
 
       setIncomingRequests(formattedIncoming);
 
-      // Fetch outgoing requests (my requests)
+      // Fetch outgoing requests (my requests) from last 24 hours
       const { data: outgoingRequests, error: outgoingError } = await supabase
         .from('book_requests')
         .select('*')
         .eq('requester_user_id', user.id)
+        .gte('created_at', new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString())
         .order('created_at', { ascending: false });
 
       if (outgoingError) {
@@ -155,12 +157,11 @@ const Requests = () => {
 
       setOutgoingRequests(formattedOutgoing);
 
-      // Populate queue with pending requests
+      // Populate queue with all requests from last 24 hours
       requestQueue.clear();
       const bookRequestMap = new Map<string, any[]>();
       
       [...formattedIncoming, ...formattedOutgoing]
-        .filter(req => req.status === 'pending')
         .forEach(req => {
           if (!bookRequestMap.has(req.book_id)) {
             bookRequestMap.set(req.book_id, []);
