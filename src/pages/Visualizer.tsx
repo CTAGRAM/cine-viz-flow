@@ -177,7 +177,7 @@ export default function Visualizer() {
         {/* Main Content */}
         <div className="flex-1 flex flex-col overflow-hidden">
           <Tabs defaultValue="hash" className="flex-1 flex flex-col">
-          <TabsList className="w-full justify-start rounded-none border-b bg-muted/50">
+          <TabsList className="w-full justify-start rounded-none border-0 bg-transparent">
             <TabsTrigger value="hash">Hash Table</TabsTrigger>
             <TabsTrigger value="avl">AVL Tree</TabsTrigger>
             <TabsTrigger value="graph">Matching Graph</TabsTrigger>
