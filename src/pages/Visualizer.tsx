@@ -11,16 +11,15 @@ import { QueueView } from '@/components/visualizer/QueueView';
 import { EventPlayer } from '@/components/visualizer/EventPlayer';
 import { OperationBanner } from '@/components/visualizer/OperationBanner';
 import { OperationHistory } from '@/components/visualizer/OperationHistory';
-import { History, Plus, Play, ChevronDown, ChevronUp } from 'lucide-react';
+import { History, Plus, Play } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
-import { AnimatePresence, motion } from 'framer-motion';
+import { AnimatePresence } from 'framer-motion';
 import { useVisualizationSync } from '@/hooks/useVisualizationSync';
 import { bookExchangeGraph } from '@/lib/graphDataStructure';
 import { requestQueue } from '@/lib/queueDataStructure';
 import { supabase } from '@/integrations/supabase/client';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Badge } from '@/components/ui/badge';
-import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
 
 export default function Visualizer() {
   const navigate = useNavigate();
@@ -34,7 +33,6 @@ export default function Visualizer() {
   const [queueItems, setQueueItems] = useState(requestQueue.getItems());
   const [recentOperations, setRecentOperations] = useState<any[]>([]);
   const [isLoading, setIsLoading] = useState(true);
-  const [isBannerCollapsed, setIsBannerCollapsed] = useState(false);
 
   // Enable real-time sync
   useVisualizationSync();
@@ -175,6 +173,49 @@ export default function Visualizer() {
           </div>
         </div>
 
+        {/* Operation Banner */}
+        {playbackState.operation && playbackState.events.length > 0 && (
+          <div className="border-b bg-card">
+            <OperationBanner
+              operation={playbackState.operation}
+              progress={visualizationEngine.getProgressPercentage()}
+              currentStep={playbackState.currentIndex + 1}
+              totalSteps={playbackState.events.length}
+            />
+            {/* Progress Indicator */}
+            <div className="px-6 py-3 flex items-center justify-between text-sm border-t bg-muted/30">
+              <div className="flex items-center gap-4">
+                <Badge variant={playbackState.isPlaying ? "default" : "secondary"}>
+                  {playbackState.isPlaying ? (
+                    <>
+                      <Play className="h-3 w-3 mr-1" />
+                      Playing
+                    </>
+                  ) : (
+                    'Paused'
+                  )}
+                </Badge>
+                <span className="text-muted-foreground">
+                  Step {playbackState.currentIndex + 1} of {playbackState.events.length}
+                </span>
+                <span className="font-medium">
+                  {playbackState.operation.type} Operation
+                </span>
+              </div>
+              <div className="flex items-center gap-2">
+                <div className="w-32 h-2 bg-muted rounded-full overflow-hidden">
+                  <div 
+                    className="h-full bg-primary transition-all duration-300"
+                    style={{ width: `${visualizationEngine.getProgressPercentage()}%` }}
+                  />
+                </div>
+                <span className="text-xs text-muted-foreground">
+                  {Math.round(visualizationEngine.getProgressPercentage())}%
+                </span>
+              </div>
+            </div>
+          </div>
+        )}
 
         {/* Main Content */}
         <div className="flex-1 flex flex-col overflow-hidden">
@@ -280,82 +321,6 @@ export default function Visualizer() {
             </div>
           </TabsContent>
           </Tabs>
-
-          {/* Collapsible Operation Banner - Bottom */}
-          {playbackState.operation && playbackState.events.length > 0 && (
-            <Collapsible open={!isBannerCollapsed} onOpenChange={(open) => setIsBannerCollapsed(!open)}>
-              <motion.div 
-                className="border-t bg-card sticky bottom-0 z-10 shadow-lg"
-                initial={{ y: 100 }}
-                animate={{ y: 0 }}
-                transition={{ type: "spring", stiffness: 300, damping: 30 }}
-              >
-                {/* Compact Header - Always Visible */}
-                <div className="px-6 py-2 flex items-center justify-between bg-muted/30">
-                  <div className="flex items-center gap-4">
-                    <Badge variant={playbackState.isPlaying ? "default" : "secondary"} className="text-xs">
-                      {playbackState.isPlaying ? (
-                        <>
-                          <Play className="h-3 w-3 mr-1" />
-                          Playing
-                        </>
-                      ) : (
-                        'Paused'
-                      )}
-                    </Badge>
-                    <span className="text-sm font-medium">{playbackState.operation.type}</span>
-                    <span className="text-xs text-muted-foreground">
-                      Step {playbackState.currentIndex + 1}/{playbackState.events.length}
-                    </span>
-                    <div className="flex items-center gap-2">
-                      <div className="w-24 h-1.5 bg-muted rounded-full overflow-hidden">
-                        <div 
-                          className="h-full bg-primary transition-all duration-300"
-                          style={{ width: `${visualizationEngine.getProgressPercentage()}%` }}
-                        />
-                      </div>
-                      <span className="text-xs text-muted-foreground">
-                        {Math.round(visualizationEngine.getProgressPercentage())}%
-                      </span>
-                    </div>
-                  </div>
-                  
-                  <CollapsibleTrigger asChild>
-                    <Button variant="ghost" size="sm">
-                      {isBannerCollapsed ? (
-                        <>
-                          <ChevronUp className="h-4 w-4 mr-1" />
-                          Expand
-                        </>
-                      ) : (
-                        <>
-                          <ChevronDown className="h-4 w-4 mr-1" />
-                          Minimize
-                        </>
-                      )}
-                    </Button>
-                  </CollapsibleTrigger>
-                </div>
-
-                {/* Expanded Content */}
-                <CollapsibleContent>
-                  <motion.div
-                    initial={{ opacity: 0, height: 0 }}
-                    animate={{ opacity: 1, height: "auto" }}
-                    exit={{ opacity: 0, height: 0 }}
-                    transition={{ duration: 0.2 }}
-                  >
-                    <OperationBanner
-                      operation={playbackState.operation}
-                      progress={visualizationEngine.getProgressPercentage()}
-                      currentStep={playbackState.currentIndex + 1}
-                      totalSteps={playbackState.events.length}
-                    />
-                  </motion.div>
-                </CollapsibleContent>
-              </motion.div>
-            </Collapsible>
-          )}
 
           {/* Event Player */}
           {playbackState.events.length > 0 && (
