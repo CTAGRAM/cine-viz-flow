@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import { bookStore as movieStore } from '@/lib/bookStore';
 import { visualizationEngine } from '@/lib/visualizationEngine';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Tabs, TabsContent } from '@/components/ui/tabs';
 import { Button } from '@/components/ui/button';
 import { HashTableView } from '@/components/visualizer/HashTableView';
 import { AVLTreeView } from '@/components/visualizer/AVLTreeView';
@@ -33,6 +33,7 @@ export default function Visualizer() {
   const [queueItems, setQueueItems] = useState(requestQueue.getItems());
   const [recentOperations, setRecentOperations] = useState<any[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+  const [currentView, setCurrentView] = useState('hash');
 
   // Enable real-time sync
   useVisualizationSync();
@@ -133,6 +134,19 @@ export default function Visualizer() {
             </p>
           </div>
           <div className="flex gap-2">
+            <Select value={currentView} onValueChange={setCurrentView}>
+              <SelectTrigger className="w-[200px]">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="hash">Hash Table</SelectItem>
+                <SelectItem value="avl">AVL Tree</SelectItem>
+                <SelectItem value="graph">Matching Graph</SelectItem>
+                <SelectItem value="trie">Trie Search</SelectItem>
+                <SelectItem value="queue">Request Queue</SelectItem>
+                <SelectItem value="split">Split View</SelectItem>
+              </SelectContent>
+            </Select>
             {recentOperations.length > 0 && (
               <Select onValueChange={loadOperation}>
                 <SelectTrigger className="w-[250px]">
@@ -176,31 +190,26 @@ export default function Visualizer() {
 
         {/* Main Content */}
         <div className="flex-1 flex flex-col overflow-hidden">
-          <Tabs defaultValue="hash" className="flex-1 flex flex-col">
-          <TabsList className="w-full justify-start rounded-none border-0 bg-transparent">
-            <TabsTrigger value="hash">Hash Table</TabsTrigger>
-            <TabsTrigger value="avl">AVL Tree</TabsTrigger>
-            <TabsTrigger value="graph">Matching Graph</TabsTrigger>
-            <TabsTrigger value="trie">Trie Search</TabsTrigger>
-            <TabsTrigger value="queue">Request Queue</TabsTrigger>
-            <TabsTrigger value="split">Split View</TabsTrigger>
-          </TabsList>
+          {currentView === 'hash' && (
+            <div className="flex-1 overflow-hidden">
+              <HashTableView
+                events={eventsUpToCurrent}
+                buckets={hashBuckets}
+              />
+            </div>
+          )}
 
-          <TabsContent value="hash" className="flex-1 m-0 overflow-hidden">
-            <HashTableView
-              events={eventsUpToCurrent}
-              buckets={hashBuckets}
-            />
-          </TabsContent>
+          {currentView === 'avl' && (
+            <div className="flex-1 overflow-hidden">
+              <AVLTreeView
+                events={eventsUpToCurrent}
+                root={avlRoot}
+              />
+            </div>
+          )}
 
-          <TabsContent value="avl" className="flex-1 m-0 overflow-hidden">
-            <AVLTreeView
-              events={eventsUpToCurrent}
-              root={avlRoot}
-            />
-          </TabsContent>
-
-          <TabsContent value="graph" className="flex-1 m-0 overflow-auto">
+          {currentView === 'graph' && (
+            <div className="flex-1 overflow-auto">
             {graphNodes.length === 0 ? (
               <div className="flex items-center justify-center h-full p-8">
                 <div className="text-center space-y-4 max-w-2xl">
@@ -230,34 +239,40 @@ export default function Visualizer() {
                 events={eventsUpToCurrent}
                 nodes={graphNodes}
                 edges={graphEdges}
-              />
-            )}
-          </TabsContent>
+                />
+              )}
+            </div>
+          )}
 
-          <TabsContent value="trie" className="flex-1 m-0 overflow-auto">
+          {currentView === 'trie' && (
+            <div className="flex-1 overflow-auto">
             <div className="p-4 bg-blue-50 dark:bg-blue-950 border-b">
               <p className="text-sm text-blue-800 dark:text-blue-200">
                 <strong>Trie Search:</strong> Visualizes character-by-character prefix matching for autocomplete. 
                 Try searching on the <strong>Search</strong> page to see this in action!
               </p>
             </div>
-            <TrieView events={eventsUpToCurrent} />
-          </TabsContent>
+              <TrieView events={eventsUpToCurrent} />
+            </div>
+          )}
 
-          <TabsContent value="queue" className="flex-1 m-0 overflow-auto">
+          {currentView === 'queue' && (
+            <div className="flex-1 overflow-auto">
             <div className="p-4 bg-purple-50 dark:bg-purple-950 border-b">
               <p className="text-sm text-purple-800 dark:text-purple-200">
                 <strong>Request Queue:</strong> Shows FIFO (First-In-First-Out) queue operations for book requests. 
                 Visit the <strong>Requests</strong> page to see enqueue/dequeue operations!
               </p>
             </div>
-            <QueueView
-              events={eventsUpToCurrent}
-              queueItems={queueItems}
-            />
-          </TabsContent>
+              <QueueView
+                events={eventsUpToCurrent}
+                queueItems={queueItems}
+              />
+            </div>
+          )}
 
-          <TabsContent value="split" className="flex-1 m-0 grid grid-cols-2 gap-4 p-4">
+          {currentView === 'split' && (
+            <div className="flex-1 grid grid-cols-2 gap-4 p-4">
             <div className="border rounded-lg overflow-hidden">
               <div className="bg-muted p-2 border-b">
                 <h3 className="font-semibold text-sm">Hash Table</h3>
@@ -276,8 +291,8 @@ export default function Visualizer() {
                 root={avlRoot}
               />
             </div>
-          </TabsContent>
-          </Tabs>
+            </div>
+          )}
 
           {/* Event Player */}
           {playbackState.events.length > 0 && (
