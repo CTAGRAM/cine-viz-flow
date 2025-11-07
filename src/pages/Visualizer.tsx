@@ -173,49 +173,6 @@ export default function Visualizer() {
           </div>
         </div>
 
-        {/* Operation Banner */}
-        {playbackState.operation && playbackState.events.length > 0 && (
-          <div className="border-b bg-card">
-            <OperationBanner
-              operation={playbackState.operation}
-              progress={visualizationEngine.getProgressPercentage()}
-              currentStep={playbackState.currentIndex + 1}
-              totalSteps={playbackState.events.length}
-            />
-            {/* Progress Indicator */}
-            <div className="px-6 py-3 flex items-center justify-between text-sm border-t bg-muted/30">
-              <div className="flex items-center gap-4">
-                <Badge variant={playbackState.isPlaying ? "default" : "secondary"}>
-                  {playbackState.isPlaying ? (
-                    <>
-                      <Play className="h-3 w-3 mr-1" />
-                      Playing
-                    </>
-                  ) : (
-                    'Paused'
-                  )}
-                </Badge>
-                <span className="text-muted-foreground">
-                  Step {playbackState.currentIndex + 1} of {playbackState.events.length}
-                </span>
-                <span className="font-medium">
-                  {playbackState.operation.type} Operation
-                </span>
-              </div>
-              <div className="flex items-center gap-2">
-                <div className="w-32 h-2 bg-muted rounded-full overflow-hidden">
-                  <div 
-                    className="h-full bg-primary transition-all duration-300"
-                    style={{ width: `${visualizationEngine.getProgressPercentage()}%` }}
-                  />
-                </div>
-                <span className="text-xs text-muted-foreground">
-                  {Math.round(visualizationEngine.getProgressPercentage())}%
-                </span>
-              </div>
-            </div>
-          </div>
-        )}
 
         {/* Main Content */}
         <div className="flex-1 flex flex-col overflow-hidden">
