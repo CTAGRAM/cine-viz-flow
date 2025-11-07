@@ -11,7 +11,7 @@ import { QueueView } from '@/components/visualizer/QueueView';
 import { EventPlayer } from '@/components/visualizer/EventPlayer';
 import { OperationBanner } from '@/components/visualizer/OperationBanner';
 import { OperationHistory } from '@/components/visualizer/OperationHistory';
-import { History, Plus, Play } from 'lucide-react';
+import { History, Plus, Play, Sparkles } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { AnimatePresence } from 'framer-motion';
 import { useVisualizationSync } from '@/hooks/useVisualizationSync';
@@ -20,6 +20,14 @@ import { requestQueue } from '@/lib/queueDataStructure';
 import { supabase } from '@/integrations/supabase/client';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Badge } from '@/components/ui/badge';
+import { useToast } from '@/hooks/use-toast';
+import { 
+  generateHashTableDemo, 
+  generateAVLTreeDemo, 
+  generateTrieDemo, 
+  generateGraphDemo, 
+  generateQueueDemo 
+} from '@/lib/sampleVisualizations';
 
 export default function Visualizer() {
   const navigate = useNavigate();
@@ -34,6 +42,8 @@ export default function Visualizer() {
   const [recentOperations, setRecentOperations] = useState<any[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [currentView, setCurrentView] = useState('hash');
+  const [isDemoMode, setIsDemoMode] = useState(false);
+  const { toast } = useToast();
 
   // Enable real-time sync
   useVisualizationSync();
@@ -153,6 +163,65 @@ export default function Visualizer() {
       
       visualizationEngine.setEvents(events as any, operation);
       visualizationEngine.play();
+      setIsDemoMode(false);
+    }
+  };
+
+  const runDemo = async () => {
+    setIsDemoMode(true);
+    toast({
+      title: "Running Demo",
+      description: `Loading ${currentView === 'hash' ? 'Hash Table' : currentView === 'avl' ? 'AVL Tree' : currentView === 'trie' ? 'Trie Search' : currentView === 'graph' ? 'Graph' : 'Queue'} demo visualization...`
+    });
+
+    let demoEvents: any[] = [];
+    let metadata: any = {};
+    let operationType: any = 'ADD';
+
+    try {
+      switch(currentView) {
+        case 'hash':
+          demoEvents = await generateHashTableDemo();
+          metadata = { description: 'Hash Table demo - Inserting sample books' };
+          operationType = 'ADD';
+          break;
+        case 'avl':
+          demoEvents = await generateAVLTreeDemo();
+          metadata = { description: 'AVL Tree demo - Tree balancing operations' };
+          operationType = 'ADD';
+          break;
+        case 'trie':
+          demoEvents = await generateTrieDemo();
+          metadata = { description: 'Trie Search demo - Prefix matching' };
+          operationType = 'SEARCH';
+          break;
+        case 'graph':
+          demoEvents = await generateGraphDemo();
+          metadata = { description: 'Matching Graph demo - BFS traversal' };
+          operationType = 'MATCH';
+          break;
+        case 'queue':
+          demoEvents = await generateQueueDemo();
+          metadata = { description: 'Request Queue demo - FIFO operations' };
+          operationType = 'ADD';
+          break;
+      }
+
+      visualizationEngine.setEvents(demoEvents as any, {
+        type: operationType,
+        timestamp: Date.now(),
+        eventsCount: demoEvents.length,
+        ...metadata
+      });
+      visualizationEngine.play();
+    } catch (error) {
+      console.error('Demo generation error:', error);
+      toast({
+        title: "Demo Error",
+        description: "Failed to generate demo visualization",
+        variant: "destructive"
+      });
+      setIsDemoMode(false);
     }
   };
 
@@ -163,13 +232,30 @@ export default function Visualizer() {
       <div className="flex-1 flex flex-col overflow-hidden">
         {/* Header */}
         <div className="border-b bg-card px-6 py-4 flex items-center justify-between">
-          <div>
-            <h1 className="text-2xl font-bold">Data Structure Visualizer</h1>
-            <p className="text-sm text-muted-foreground">
-              Watch data structures in action - Real-time step-by-step animations
-            </p>
+          <div className="flex items-center gap-3">
+            <div>
+              <h1 className="text-2xl font-bold">Data Structure Visualizer</h1>
+              <p className="text-sm text-muted-foreground">
+                Watch data structures in action - Real-time step-by-step animations
+              </p>
+            </div>
+            {isDemoMode && (
+              <Badge variant="secondary" className="animate-pulse">
+                <Sparkles className="w-3 h-3 mr-1" />
+                Demo Mode
+              </Badge>
+            )}
           </div>
           <div className="flex gap-2">
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={runDemo}
+              className="gap-2"
+            >
+              <Sparkles className="h-4 w-4" />
+              Run Demo
+            </Button>
             <Select value={currentView} onValueChange={setCurrentView}>
               <SelectTrigger className="w-[200px]">
                 <SelectValue />

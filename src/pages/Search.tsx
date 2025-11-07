@@ -43,6 +43,10 @@ export default function Search() {
       bookTrie.addListener(listener);
       
       const matches = bookTrie.search(value.trim());
+      
+      // Remove listener immediately after operation
+      bookTrie.removeListener(listener);
+      
       setSuggestions(matches.slice(0, 10));
       setShowSuggestions(true);
       
@@ -98,6 +102,10 @@ export default function Search() {
       bookTrie.addListener(listener);
       
       const bookIds = bookTrie.searchBookIds(searchTerm.trim());
+      
+      // Remove listener immediately after operation
+      bookTrie.removeListener(listener);
+      
       const allBooks = bookStore.getAllBooks();
       const filtered = allBooks.filter(book =>
         bookIds.includes(book.id) &&

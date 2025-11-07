@@ -39,6 +39,17 @@ export class BookTrie {
     this.eventListeners.push(listener);
   }
 
+  removeListener(listener: EventListener) {
+    const index = this.eventListeners.indexOf(listener);
+    if (index > -1) {
+      this.eventListeners.splice(index, 1);
+    }
+  }
+
+  clearListeners() {
+    this.eventListeners = [];
+  }
+
   private emit(event: TrieVisualizationEvent) {
     this.currentEvents.push(event);
   }
