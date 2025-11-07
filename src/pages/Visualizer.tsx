@@ -75,6 +75,41 @@ export default function Visualizer() {
     };
 
     loadLastOperation();
+    
+    // Load pending requests into queue
+    const loadQueueData = async () => {
+      try {
+        const { data: pendingRequests } = await supabase
+          .from('book_requests')
+          .select(`
+            id,
+            book_id,
+            created_at,
+            books!inner(title),
+            profiles!book_requests_requester_user_id_fkey(full_name)
+          `)
+          .eq('status', 'pending')
+          .order('created_at', { ascending: true });
+
+        if (pendingRequests && pendingRequests.length > 0) {
+          requestQueue.clear();
+          pendingRequests.forEach((req: any) => {
+            requestQueue.enqueue({
+              requestId: req.id,
+              bookId: req.book_id,
+              bookTitle: req.books?.title || 'Unknown',
+              requester_name: req.profiles?.full_name || 'Unknown',
+              timestamp: new Date(req.created_at).getTime(),
+            }, 1);
+          });
+          setQueueItems(requestQueue.getItems());
+        }
+      } catch (error) {
+        console.error('Error loading queue data:', error);
+      }
+    };
+    
+    loadQueueData();
   }, []);
 
   useEffect(() => {

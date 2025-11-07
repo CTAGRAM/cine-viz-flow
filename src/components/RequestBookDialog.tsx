@@ -9,6 +9,8 @@ import { sendEmailNotification } from '@/lib/emailNotifications';
 import { toast } from 'sonner';
 import { BookOpen, Loader2 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
+import { requestQueue } from '@/lib/queueDataStructure';
+import { saveVisualizationEvent } from '@/hooks/useVisualizationSync';
 
 interface RequestBookDialogProps {
   bookId: string;
@@ -50,7 +52,7 @@ export const RequestBookDialog = ({ bookId, bookTitle, ownerId, ownerEmail, onRe
       }
 
       // Create the request
-      const { error } = await supabase
+      const { data: newRequest, error } = await supabase
         .from('book_requests')
         .insert({
           book_id: bookId,
@@ -58,21 +60,45 @@ export const RequestBookDialog = ({ bookId, bookTitle, ownerId, ownerEmail, onRe
           owner_user_id: ownerId,
           message: message || null,
           status: 'pending'
-        });
+        })
+        .select()
+        .single();
 
       if (error) throw error;
+
+      // Get requester's profile for queue
+      const { data: profile } = await supabase
+        .from('profiles')
+        .select('full_name')
+        .eq('id', user.id)
+        .single();
+
+      // Add to queue and capture events
+      const queueEvents: any[] = [];
+      requestQueue.addListener((events) => {
+        queueEvents.push(...events);
+      });
+
+      requestQueue.enqueue({
+        requestId: newRequest.id,
+        bookId: bookId,
+        bookTitle: bookTitle,
+        requester_name: profile?.full_name || 'You',
+        timestamp: Date.now(),
+      }, 1);
+
+      // Save visualization events
+      if (queueEvents.length > 0) {
+        await saveVisualizationEvent('ADD', 'queue', queueEvents, {
+          description: `New book request created for "${bookTitle}"`,
+          bookTitle: bookTitle,
+        });
+      }
 
       toast.success('Request sent successfully!');
       
       // Send email notification to owner
       if (ownerEmail) {
-        // Get requester's name
-        const { data: profile } = await supabase
-          .from('profiles')
-          .select('full_name')
-          .eq('id', user.id)
-          .single();
-
         await sendEmailNotification({
           to: ownerEmail,
           subject: 'New Book Request',

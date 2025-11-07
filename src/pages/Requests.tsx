@@ -168,18 +168,17 @@ const Requests = () => {
           bookRequestMap.get(req.book_id)!.push(req);
         });
 
-      // Enqueue requests with multiple pending items
+      // Enqueue ALL pending requests
       bookRequestMap.forEach((requests, bookId) => {
-        if (requests.length > 1) {
-          requests.forEach(req => {
-            requestQueue.enqueue({
-              requestId: req.id,
-              bookId: req.book_id,
-              bookTitle: req.book_title,
-              timestamp: new Date(req.created_at).getTime(),
-            }, requests.length - requests.indexOf(req));
-          });
-        }
+        requests.forEach((req, index) => {
+          requestQueue.enqueue({
+            requestId: req.id,
+            bookId: req.book_id,
+            bookTitle: req.book_title,
+            requester_name: req.requester_name || req.owner_name,
+            timestamp: new Date(req.created_at).getTime(),
+          }, requests.length - index);
+        });
       });
     } catch (error: any) {
       console.error('Error fetching requests:', error);
