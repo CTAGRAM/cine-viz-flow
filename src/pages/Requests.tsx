@@ -194,7 +194,7 @@ const Requests = () => {
     try {
       const request = incomingRequests.find(r => r.id === requestId);
       
-      // Process queue: dequeue accepted request
+      // Capture queue events BEFORE modification
       const queueEvents: any[] = [];
       requestQueue.addListener((events) => {
         queueEvents.push(...events);
@@ -205,6 +205,9 @@ const Requests = () => {
         requestQueue.remove(queueItem.id);
       }
       
+      // Capture events before they're cleared
+      const capturedEvents = [...queueEvents];
+      
       const { error } = await supabase
         .from('book_requests')
         .update({ status: 'accepted' })
@@ -214,10 +217,10 @@ const Requests = () => {
 
       toast.success('Request accepted!');
       
-      // Save queue visualization
-      if (queueEvents.length > 0) {
-        await saveVisualizationEvent('DELETE', 'queue', queueEvents, {
-          description: `Accepted request and removed from queue`,
+      // Save queue visualization with captured events
+      if (capturedEvents.length > 0) {
+        await saveVisualizationEvent('DELETE', 'queue', capturedEvents, {
+          description: `Accepted request and dequeued from queue`,
           requestId: requestId,
         });
       }
@@ -249,7 +252,7 @@ const Requests = () => {
   const handleReject = async (requestId: string) => {
     setActionLoading(requestId);
     try {
-      // Process queue: dequeue rejected request
+      // Capture queue events BEFORE modification
       const queueEvents: any[] = [];
       requestQueue.addListener((events) => {
         queueEvents.push(...events);
@@ -260,6 +263,9 @@ const Requests = () => {
         requestQueue.remove(queueItem.id);
       }
       
+      // Capture events before they're cleared
+      const capturedEvents = [...queueEvents];
+      
       const { error } = await supabase
         .from('book_requests')
         .update({ status: 'rejected' })
@@ -269,10 +275,10 @@ const Requests = () => {
 
       toast.success('Request rejected');
       
-      // Save queue visualization
-      if (queueEvents.length > 0) {
-        await saveVisualizationEvent('DELETE', 'queue', queueEvents, {
-          description: `Rejected request and removed from queue`,
+      // Save queue visualization with captured events
+      if (capturedEvents.length > 0) {
+        await saveVisualizationEvent('DELETE', 'queue', capturedEvents, {
+          description: `Rejected request and dequeued from queue`,
           requestId: requestId,
         });
       }

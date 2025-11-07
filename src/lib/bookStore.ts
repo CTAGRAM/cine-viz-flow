@@ -72,13 +72,16 @@ export class BookStore {
       this.currentOperation.eventsCount = this.eventQueue.length;
     }
 
+    // CRITICAL: Capture events BEFORE flushing
+    const eventsToSave = [...this.eventQueue];
+    
     this.flushEvents();
     
-    // Save visualization to database
+    // Save visualization to database with captured events
     await saveVisualizationEvent(
       operationType,
       'hash_table',
-      this.eventQueue,
+      eventsToSave,
       {
         bookId: book.id,
         bookName: book.name,
@@ -104,13 +107,16 @@ export class BookStore {
       this.currentOperation.movieName = result?.name;
     }
 
+    // CRITICAL: Capture events BEFORE flushing
+    const eventsToSave = [...this.eventQueue];
+    
     this.flushEvents();
     
-    // Save visualization to database
+    // Save visualization to database with captured events
     await saveVisualizationEvent(
       'SEARCH',
       'hash_table',
-      this.eventQueue,
+      eventsToSave,
       {
         bookId: id,
         bookName: result?.name,
@@ -135,13 +141,16 @@ export class BookStore {
       this.currentOperation.movieName = `Top ${k} Books`;
     }
 
+    // CRITICAL: Capture events BEFORE flushing
+    const eventsToSave = [...this.eventQueue];
+    
     this.flushEvents();
     
-    // Save visualization to database
+    // Save visualization to database with captured events
     await saveVisualizationEvent(
       'TOP_K',
       'avl_tree',
-      this.eventQueue,
+      eventsToSave,
       {
         description: `Retrieved top ${k} rated books`
       }

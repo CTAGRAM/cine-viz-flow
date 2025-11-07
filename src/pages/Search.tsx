@@ -11,6 +11,7 @@ import { Slider } from '@/components/ui/slider';
 import { useNavigate } from 'react-router-dom';
 import { Badge } from '@/components/ui/badge';
 import { ScrollArea } from '@/components/ui/scroll-area';
+import { saveVisualizationEvent } from '@/hooks/useVisualizationSync';
 
 export default function Search() {
   const [searchQuery, setSearchQuery] = useState('');
@@ -30,13 +31,29 @@ export default function Search() {
   }, []);
 
   // Handle search query changes for autocomplete
-  const handleQueryChange = (value: string) => {
+  const handleQueryChange = async (value: string) => {
     setSearchQuery(value);
     
     if (value.trim().length >= 2) {
+      // Capture trie events
+      const trieEvents: any[] = [];
+      const listener = (events: any[]) => {
+        trieEvents.push(...events);
+      };
+      bookTrie.addListener(listener);
+      
       const matches = bookTrie.search(value.trim());
       setSuggestions(matches.slice(0, 10));
       setShowSuggestions(true);
+      
+      // Save trie visualization events
+      if (trieEvents.length > 0) {
+        await saveVisualizationEvent('SEARCH', 'trie', trieEvents, {
+          query: value.trim(),
+          matchCount: matches.length,
+          description: `Autocomplete search for "${value.trim()}"`
+        });
+      }
     } else {
       setSuggestions([]);
       setShowSuggestions(false);
@@ -73,6 +90,13 @@ export default function Search() {
       });
     } else {
       // Fallback to title search using Trie
+      // Capture trie events for visualization
+      const trieEvents: any[] = [];
+      const listener = (events: any[]) => {
+        trieEvents.push(...events);
+      };
+      bookTrie.addListener(listener);
+      
       const bookIds = bookTrie.searchBookIds(searchTerm.trim());
       const allBooks = bookStore.getAllBooks();
       const filtered = allBooks.filter(book =>
@@ -83,6 +107,15 @@ export default function Search() {
       
       setFoundInBucket(null);
       setResults(filtered);
+      
+      // Save trie visualization
+      if (trieEvents.length > 0) {
+        await saveVisualizationEvent('SEARCH', 'trie', trieEvents, {
+          query: searchTerm.trim(),
+          matchCount: filtered.length,
+          description: `Title search for "${searchTerm.trim()}" found ${filtered.length} book(s)`
+        });
+      }
       
       if (filtered.length === 0) {
         toast({

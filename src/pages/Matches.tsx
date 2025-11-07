@@ -87,13 +87,35 @@ const Matches = () => {
 
       const profileMap = new Map(profilesData?.map(p => [p.id, { name: p.full_name, email: p.email }]) || []);
 
-      // Use graph-based matching with BFS traversal
+      // Build graph from current state
+      bookExchangeGraph.clear();
+      
+      // Capture graph events
       const graphEvents: any[] = [];
       bookExchangeGraph.addListener((events) => {
         graphEvents.push(...events);
       });
 
-      // Calculate matches using both graph traversal and scoring
+      // Add student nodes (current user + book owners)
+      bookExchangeGraph.addNode(user.id, 'student', profileMap.get(user.id)?.name || 'You');
+      userIds.forEach(ownerId => {
+        if (ownerId !== user.id) {
+          bookExchangeGraph.addNode(
+            ownerId, 
+            'student', 
+            profileMap.get(ownerId)?.name || 'Student'
+          );
+        }
+      });
+
+      // Add book nodes and ownership edges
+      const allBooksForGraph = [...userBooksData, ...(allBooksData || [])];
+      allBooksForGraph.forEach(bookData => {
+        bookExchangeGraph.addNode(bookData.id, 'book', bookData.title);
+        bookExchangeGraph.addEdge(bookData.owner_user_id, bookData.id, 'owns');
+      });
+
+      // Calculate matches using scoring
       const matchesFound: BookMatch[] = [];
 
       for (const userBook of userBooks) {
@@ -114,6 +136,9 @@ const Matches = () => {
           const match = calculateMatch(userBook, otherBook);
           
           if (match.score > 0) {
+            // Add "wants" edge to graph
+            bookExchangeGraph.addEdge(user.id, otherBook.id, 'wants');
+            
             matchesFound.push({
               book: otherBook,
               ownerId: otherBookData.owner_user_id,
@@ -126,11 +151,18 @@ const Matches = () => {
         }
       }
 
+      // Perform BFS to find exchange paths (demonstrates graph traversal)
+      if (matchesFound.length > 0) {
+        bookExchangeGraph.findMatches(user.id);
+      }
+
       // Save graph visualization events
       if (graphEvents.length > 0) {
         await saveVisualizationEvent('MATCH', 'graph', graphEvents, {
-          description: `Found ${matchesFound.length} matches for user`,
+          description: `Graph-based matching: Found ${matchesFound.length} potential book exchanges`,
           userId: user.id,
+          nodeCount: bookExchangeGraph.getNodes().length,
+          edgeCount: bookExchangeGraph.getEdges().length,
         });
       }
 

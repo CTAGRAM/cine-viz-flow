@@ -127,19 +127,57 @@ export default function Visualizer() {
             />
           </TabsContent>
 
-          <TabsContent value="graph" className="flex-1 m-0">
-            <GraphView
-              events={eventsUpToCurrent}
-              nodes={graphNodes}
-              edges={graphEdges}
-            />
+          <TabsContent value="graph" className="flex-1 m-0 overflow-auto">
+            {graphNodes.length === 0 ? (
+              <div className="flex items-center justify-center h-full p-8">
+                <div className="text-center space-y-4 max-w-2xl">
+                  <div className="text-6xl">🕸️</div>
+                  <h3 className="text-xl font-semibold">No Graph Data Yet</h3>
+                  <p className="text-muted-foreground">
+                    The matching graph visualizes relationships between students and books using BFS traversal.
+                    Go to the <strong>Matches</strong> page to see graph-based matching in action!
+                  </p>
+                  <div className="bg-card border rounded-lg p-4 text-left space-y-2 text-sm">
+                    <p className="font-semibold">How it works:</p>
+                    <ul className="space-y-1 text-muted-foreground">
+                      <li>• <strong>Student nodes</strong> (circular) represent users</li>
+                      <li>• <strong>Book nodes</strong> (rectangular) represent books</li>
+                      <li>• <strong>"owns" edges</strong> connect students to their books</li>
+                      <li>• <strong>"wants" edges</strong> show interest in books</li>
+                      <li>• <strong>BFS traversal</strong> finds exchange paths</li>
+                    </ul>
+                  </div>
+                  <Button onClick={() => navigate('/matches')}>
+                    View Matches
+                  </Button>
+                </div>
+              </div>
+            ) : (
+              <GraphView
+                events={eventsUpToCurrent}
+                nodes={graphNodes}
+                edges={graphEdges}
+              />
+            )}
           </TabsContent>
 
-          <TabsContent value="trie" className="flex-1 m-0">
+          <TabsContent value="trie" className="flex-1 m-0 overflow-auto">
+            <div className="p-4 bg-blue-50 dark:bg-blue-950 border-b">
+              <p className="text-sm text-blue-800 dark:text-blue-200">
+                <strong>Trie Search:</strong> Visualizes character-by-character prefix matching for autocomplete. 
+                Try searching on the <strong>Search</strong> page to see this in action!
+              </p>
+            </div>
             <TrieView events={eventsUpToCurrent} />
           </TabsContent>
 
-          <TabsContent value="queue" className="flex-1 m-0">
+          <TabsContent value="queue" className="flex-1 m-0 overflow-auto">
+            <div className="p-4 bg-purple-50 dark:bg-purple-950 border-b">
+              <p className="text-sm text-purple-800 dark:text-purple-200">
+                <strong>Request Queue:</strong> Shows FIFO (First-In-First-Out) queue operations for book requests. 
+                Visit the <strong>Requests</strong> page to see enqueue/dequeue operations!
+              </p>
+            </div>
             <QueueView
               events={eventsUpToCurrent}
               queueItems={queueItems}
@@ -184,12 +222,48 @@ export default function Visualizer() {
           {/* Empty State */}
           {playbackState.events.length === 0 && (
             <div className="flex-1 flex items-center justify-center p-12 text-center">
-              <div className="space-y-4">
+              <div className="space-y-6 max-w-3xl">
                 <div className="text-6xl">📚</div>
-                <h3 className="text-2xl font-semibold">Ready to visualize!</h3>
-                <p className="text-muted-foreground max-w-md">
-                  Add, search, or update books to see stunning real-time step-by-step animations of Hash Table and AVL Tree operations
+                <h3 className="text-2xl font-semibold">Ready to Visualize Data Structures!</h3>
+                <p className="text-muted-foreground">
+                  Perform operations to see beautiful step-by-step animations of algorithms in action
                 </p>
+                
+                {/* Quick Guide */}
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-left">
+                  <div className="bg-card border rounded-lg p-4 space-y-2">
+                    <div className="text-2xl">📊</div>
+                    <h4 className="font-semibold">Hash Table & AVL Tree</h4>
+                    <p className="text-sm text-muted-foreground">
+                      Add or search books to see hash table lookups and AVL tree balancing
+                    </p>
+                  </div>
+                  
+                  <div className="bg-card border rounded-lg p-4 space-y-2">
+                    <div className="text-2xl">🔍</div>
+                    <h4 className="font-semibold">Trie Search</h4>
+                    <p className="text-sm text-muted-foreground">
+                      Use the search page to visualize prefix-based autocomplete
+                    </p>
+                  </div>
+                  
+                  <div className="bg-card border rounded-lg p-4 space-y-2">
+                    <div className="text-2xl">🕸️</div>
+                    <h4 className="font-semibold">Matching Graph</h4>
+                    <p className="text-sm text-muted-foreground">
+                      View matches to see BFS graph traversal for book exchanges
+                    </p>
+                  </div>
+                  
+                  <div className="bg-card border rounded-lg p-4 space-y-2">
+                    <div className="text-2xl">📋</div>
+                    <h4 className="font-semibold">Request Queue</h4>
+                    <p className="text-sm text-muted-foreground">
+                      Accept/reject requests to see FIFO queue operations
+                    </p>
+                  </div>
+                </div>
+                
                 <Button onClick={() => navigate('/add')} size="lg">
                   <Plus className="h-4 w-4 mr-2" />
                   List Your First Book
