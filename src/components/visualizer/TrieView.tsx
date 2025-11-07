@@ -247,7 +247,7 @@ export const TrieView = ({ events }: TrieViewProps) => {
       </div>
 
       {/* Trie Canvas */}
-      <div className="flex-1 border rounded-lg overflow-hidden bg-background">
+      <div className="flex-1 border rounded-lg overflow-hidden bg-background max-h-[calc(100vh-400px)]">
         <TransformWrapper
           initialScale={1}
           minScale={0.5}

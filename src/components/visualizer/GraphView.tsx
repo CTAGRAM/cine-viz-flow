@@ -172,7 +172,7 @@ export const GraphView = ({ events, nodes, edges }: GraphViewProps) => {
       </div>
 
       {/* Graph Canvas */}
-      <div className="flex-1 border rounded-lg overflow-hidden bg-background">
+      <div className="flex-1 border rounded-lg overflow-hidden bg-background max-h-[calc(100vh-400px)]">
         <TransformWrapper
           initialScale={1}
           minScale={0.5}

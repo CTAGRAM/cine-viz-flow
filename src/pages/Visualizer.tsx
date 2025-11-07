@@ -11,12 +11,15 @@ import { QueueView } from '@/components/visualizer/QueueView';
 import { EventPlayer } from '@/components/visualizer/EventPlayer';
 import { OperationBanner } from '@/components/visualizer/OperationBanner';
 import { OperationHistory } from '@/components/visualizer/OperationHistory';
-import { History, Plus } from 'lucide-react';
+import { History, Plus, Play } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { AnimatePresence } from 'framer-motion';
 import { useVisualizationSync } from '@/hooks/useVisualizationSync';
 import { bookExchangeGraph } from '@/lib/graphDataStructure';
 import { requestQueue } from '@/lib/queueDataStructure';
+import { supabase } from '@/integrations/supabase/client';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Badge } from '@/components/ui/badge';
 
 export default function Visualizer() {
   const navigate = useNavigate();
@@ -28,9 +31,50 @@ export default function Visualizer() {
   const [graphNodes, setGraphNodes] = useState(bookExchangeGraph.getNodes());
   const [graphEdges, setGraphEdges] = useState(bookExchangeGraph.getEdges());
   const [queueItems, setQueueItems] = useState(requestQueue.getItems());
+  const [recentOperations, setRecentOperations] = useState<any[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
 
   // Enable real-time sync
   useVisualizationSync();
+
+  // Load last operation on mount
+  useEffect(() => {
+    const loadLastOperation = async () => {
+      try {
+        const { data, error } = await supabase
+          .from('visualization_events')
+          .select('*')
+          .order('created_at', { ascending: false })
+          .limit(10);
+
+        if (error) throw error;
+
+        if (data && data.length > 0) {
+          setRecentOperations(data);
+          
+          // Auto-load the most recent operation
+          const lastOp = data[0];
+          const events = Array.isArray(lastOp.events) ? lastOp.events : [];
+          const metadata = (lastOp.metadata as Record<string, any>) || {};
+          const operation = {
+            type: lastOp.operation_type as any,
+            timestamp: new Date(lastOp.created_at).getTime(),
+            eventsCount: events.length,
+            ...metadata
+          };
+          
+          visualizationEngine.setEvents(events as any, operation);
+          visualizationEngine.play();
+        }
+      } catch (error) {
+        console.error('Error loading last operation:', error);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    loadLastOperation();
+  }, []);
 
   useEffect(() => {
     // Subscribe to visualization events
@@ -58,6 +102,23 @@ export default function Visualizer() {
     setShowHistory(false);
   };
 
+  const loadOperation = (opId: string) => {
+    const op = recentOperations.find(o => o.id === opId);
+    if (op) {
+      const events = Array.isArray(op.events) ? op.events : [];
+      const metadata = (op.metadata as Record<string, any>) || {};
+      const operation = {
+        type: op.operation_type as any,
+        timestamp: new Date(op.created_at).getTime(),
+        eventsCount: events.length,
+        ...metadata
+      };
+      
+      visualizationEngine.setEvents(events as any, operation);
+      visualizationEngine.play();
+    }
+  };
+
   const eventsUpToCurrent = visualizationEngine.getEventsUpToCurrent();
 
   return (
@@ -72,6 +133,27 @@ export default function Visualizer() {
             </p>
           </div>
           <div className="flex gap-2">
+            {recentOperations.length > 0 && (
+              <Select onValueChange={loadOperation}>
+                <SelectTrigger className="w-[250px]">
+                  <SelectValue placeholder="Load recent operation..." />
+                </SelectTrigger>
+                <SelectContent>
+                  {recentOperations.map((op) => (
+                    <SelectItem key={op.id} value={op.id}>
+                      <div className="flex items-center gap-2">
+                        <Badge variant="outline" className="text-xs">
+                          {op.operation_type}
+                        </Badge>
+                        <span className="text-xs text-muted-foreground">
+                          {new Date(op.created_at).toLocaleTimeString()}
+                        </span>
+                      </div>
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            )}
             <Button
               variant="outline"
               size="sm"
@@ -93,12 +175,46 @@ export default function Visualizer() {
 
         {/* Operation Banner */}
         {playbackState.operation && playbackState.events.length > 0 && (
-          <OperationBanner
-            operation={playbackState.operation}
-            progress={visualizationEngine.getProgressPercentage()}
-            currentStep={playbackState.currentIndex + 1}
-            totalSteps={playbackState.events.length}
-          />
+          <div className="border-b bg-card">
+            <OperationBanner
+              operation={playbackState.operation}
+              progress={visualizationEngine.getProgressPercentage()}
+              currentStep={playbackState.currentIndex + 1}
+              totalSteps={playbackState.events.length}
+            />
+            {/* Progress Indicator */}
+            <div className="px-6 py-3 flex items-center justify-between text-sm border-t bg-muted/30">
+              <div className="flex items-center gap-4">
+                <Badge variant={playbackState.isPlaying ? "default" : "secondary"}>
+                  {playbackState.isPlaying ? (
+                    <>
+                      <Play className="h-3 w-3 mr-1" />
+                      Playing
+                    </>
+                  ) : (
+                    'Paused'
+                  )}
+                </Badge>
+                <span className="text-muted-foreground">
+                  Step {playbackState.currentIndex + 1} of {playbackState.events.length}
+                </span>
+                <span className="font-medium">
+                  {playbackState.operation.type} Operation
+                </span>
+              </div>
+              <div className="flex items-center gap-2">
+                <div className="w-32 h-2 bg-muted rounded-full overflow-hidden">
+                  <div 
+                    className="h-full bg-primary transition-all duration-300"
+                    style={{ width: `${visualizationEngine.getProgressPercentage()}%` }}
+                  />
+                </div>
+                <span className="text-xs text-muted-foreground">
+                  {Math.round(visualizationEngine.getProgressPercentage())}%
+                </span>
+              </div>
+            </div>
+          </div>
         )}
 
         {/* Main Content */}
@@ -113,14 +229,14 @@ export default function Visualizer() {
             <TabsTrigger value="split">Split View</TabsTrigger>
           </TabsList>
 
-          <TabsContent value="hash" className="flex-1 m-0">
+          <TabsContent value="hash" className="flex-1 m-0 overflow-hidden">
             <HashTableView
               events={eventsUpToCurrent}
               buckets={hashBuckets}
             />
           </TabsContent>
 
-          <TabsContent value="avl" className="flex-1 m-0">
+          <TabsContent value="avl" className="flex-1 m-0 overflow-hidden">
             <AVLTreeView
               events={eventsUpToCurrent}
               root={avlRoot}
@@ -220,8 +336,8 @@ export default function Visualizer() {
           )}
 
           {/* Empty State */}
-          {playbackState.events.length === 0 && (
-            <div className="flex-1 flex items-center justify-center p-12 text-center">
+          {playbackState.events.length === 0 && !isLoading && (
+            <div className="flex-1 flex items-center justify-center p-12 text-center overflow-auto">
               <div className="space-y-6 max-w-3xl">
                 <div className="text-6xl">📚</div>
                 <h3 className="text-2xl font-semibold">Ready to Visualize Data Structures!</h3>

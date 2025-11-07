@@ -75,7 +75,7 @@ export const QueueView = ({ events, queueItems }: QueueViewProps) => {
   }
 
   return (
-    <div className="flex flex-col h-full p-6">
+    <div className="flex flex-col h-full p-6 overflow-y-auto max-h-[calc(100vh-300px)]">
       {/* Narration */}
       {narration && (
         <div className="bg-accent/50 p-4 rounded-lg mb-6 animate-fade-in">

@@ -81,7 +81,7 @@ export function HashTableView({ events, buckets }: HashTableViewProps) {
     const timer = setTimeout(() => {
       setHighlightedBucket(null);
       setHashCalculation(null);
-    }, 2000);
+    }, 3500);
 
     return () => clearTimeout(timer);
   }, [events, buckets]);
@@ -187,7 +187,7 @@ export function HashTableView({ events, buckets }: HashTableViewProps) {
       </AnimatePresence>
 
       {/* Buckets Grid */}
-      <div className="flex-1 overflow-auto p-6">
+      <div className="flex-1 overflow-y-auto max-h-[calc(100vh-400px)] p-6">
         <div className="grid grid-cols-4 gap-4">
           {progressiveBuckets.map((bucket, index) => (
             <motion.div
@@ -221,11 +221,11 @@ export function HashTableView({ events, buckets }: HashTableViewProps) {
                   {bucket.map((movie, movieIndex) => (
                     <motion.div
                       key={movie.id}
-                      initial={{ opacity: 0, x: -20 }}
-                      animate={{ opacity: 1, x: 0 }}
-                      exit={{ opacity: 0, x: 20 }}
-                      transition={{ delay: movieIndex * 0.1 }}
-                      className="bg-background border rounded p-2"
+                      initial={{ opacity: 0, x: -20, scale: 0.8 }}
+                      animate={{ opacity: 1, x: 0, scale: 1 }}
+                      exit={{ opacity: 0, x: 20, scale: 0.8 }}
+                      transition={{ delay: movieIndex * 0.15, duration: 0.5 }}
+                      className="bg-background border-2 rounded p-2 shadow-lg"
                     >
                       <div className="flex gap-2">
                         {movie.posterUrl && (
