@@ -3,8 +3,9 @@ import { GraphVisualizationEvent, GraphNode, GraphEdge } from '@/lib/graphDataSt
 import { Card } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { TransformWrapper, TransformComponent } from 'react-zoom-pan-pinch';
-import { ZoomIn, ZoomOut, Maximize2 } from 'lucide-react';
+import { ZoomIn, ZoomOut, Maximize2, User, BookOpen, TrendingUp } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 
 interface GraphViewProps {
   events: any[];
@@ -18,6 +19,8 @@ export const GraphView = ({ events, nodes, edges }: GraphViewProps) => {
   const [narration, setNarration] = useState('');
   const [matchPaths, setMatchPaths] = useState<string[][]>([]);
   const [visitLevel, setVisitLevel] = useState<Map<string, number>>(new Map());
+  const [hoveredNode, setHoveredNode] = useState<string | null>(null);
+  const [hoveredEdge, setHoveredEdge] = useState<string | null>(null);
 
   useEffect(() => {
     if (events.length === 0) return;
@@ -111,19 +114,51 @@ export const GraphView = ({ events, nodes, edges }: GraphViewProps) => {
 
   const positions = getNodePositions();
 
-  const getEdgeColor = (edge: GraphEdge, isHighlighted: boolean) => {
-    if (isHighlighted) return 'hsl(var(--primary))';
+  const getEdgeColor = (edge: GraphEdge, isHighlighted: boolean, isHovered: boolean) => {
+    if (isHighlighted || isHovered) return 'hsl(var(--graph-highlight))';
     switch (edge.type) {
-      case 'owns': return 'hsl(var(--success))';
-      case 'wants': return 'hsl(var(--warning))';
-      case 'swap': return 'hsl(var(--chart-1))';
+      case 'owns': return 'hsl(var(--graph-edge-owns))';
+      case 'wants': return 'hsl(var(--graph-edge-wants))';
+      case 'swap': return 'hsl(var(--graph-edge-swap))';
       default: return 'hsl(var(--muted-foreground))';
     }
   };
 
-  const getNodeColor = (node: GraphNode, isHighlighted: boolean) => {
-    if (isHighlighted) return 'hsl(var(--primary))';
-    return node.type === 'student' ? 'hsl(var(--accent))' : 'hsl(var(--secondary))';
+  const getEdgeWidth = (edge: GraphEdge, isHighlighted: boolean, isHovered: boolean) => {
+    if (isHighlighted || isHovered) return 4;
+    switch (edge.type) {
+      case 'swap': return 3;
+      case 'owns': return 2.5;
+      case 'wants': return 2;
+      default: return 2;
+    }
+  };
+
+  const getNodeColor = (node: GraphNode, isHighlighted: boolean, isHovered: boolean) => {
+    if (isHighlighted || isHovered) return 'hsl(var(--graph-highlight))';
+    return node.type === 'student' ? 'hsl(var(--graph-student))' : 'hsl(var(--graph-book))';
+  };
+
+  const getConnectedNodes = (nodeId: string) => {
+    const connected = new Set<string>();
+    edges.forEach(edge => {
+      if (edge.from === nodeId) connected.add(edge.to);
+      if (edge.to === nodeId) connected.add(edge.from);
+    });
+    return connected;
+  };
+
+  const getConnectedEdges = (nodeId: string) => {
+    return edges.filter(edge => edge.from === nodeId || edge.to === nodeId);
+  };
+
+  // Create curved path for edge
+  const createCurvedPath = (x1: number, y1: number, x2: number, y2: number) => {
+    const dx = x2 - x1;
+    const dy = y2 - y1;
+    const dr = Math.sqrt(dx * dx + dy * dy);
+    const sweep = dx > 0 ? 1 : 0;
+    return `M ${x1},${y1} A ${dr},${dr} 0 0,${sweep} ${x2},${y2}`;
   };
 
   if (nodes.length === 0) {
@@ -147,32 +182,37 @@ export const GraphView = ({ events, nodes, edges }: GraphViewProps) => {
         </div>
       )}
 
-      {/* Legend */}
-      <div className="flex gap-4 mb-4 flex-wrap">
-        <Badge variant="outline">
-          <div className="w-3 h-3 rounded-full bg-accent mr-2" />
-          Students
-        </Badge>
-        <Badge variant="outline">
-          <div className="w-3 h-3 rounded-full bg-secondary mr-2" />
-          Books
-        </Badge>
-        <Badge variant="outline">
-          <div className="w-3 h-3 bg-success mr-2" />
-          Owns
-        </Badge>
-        <Badge variant="outline">
-          <div className="w-3 h-3 bg-warning mr-2" />
-          Wants
-        </Badge>
-        <Badge variant="outline">
-          <div className="w-3 h-3 bg-chart-1 mr-2" />
-          Swapped
-        </Badge>
-      </div>
+      {/* Legend - Floating Panel */}
+      <Card className="absolute top-4 left-4 z-10 p-3 space-y-2 shadow-lg">
+        <h4 className="font-semibold text-sm mb-2">Legend</h4>
+        <div className="space-y-1.5">
+          <div className="flex items-center gap-2 text-xs">
+            <User className="w-4 h-4" style={{ color: 'hsl(var(--graph-student))' }} />
+            <span>Students</span>
+          </div>
+          <div className="flex items-center gap-2 text-xs">
+            <BookOpen className="w-4 h-4" style={{ color: 'hsl(var(--graph-book))' }} />
+            <span>Books</span>
+          </div>
+          <div className="border-t pt-1.5 space-y-1">
+            <div className="flex items-center gap-2 text-xs">
+              <div className="w-6 h-0.5 rounded" style={{ backgroundColor: 'hsl(var(--graph-edge-owns))' }} />
+              <span>Owns</span>
+            </div>
+            <div className="flex items-center gap-2 text-xs">
+              <div className="w-6 h-0.5 rounded" style={{ backgroundColor: 'hsl(var(--graph-edge-wants))' }} />
+              <span>Wants</span>
+            </div>
+            <div className="flex items-center gap-2 text-xs">
+              <div className="w-6 h-1 rounded" style={{ backgroundColor: 'hsl(var(--graph-edge-swap))' }} />
+              <span>Swapped</span>
+            </div>
+          </div>
+        </div>
+      </Card>
 
       {/* Graph Canvas */}
-      <div className="flex-1 border rounded-lg overflow-hidden bg-background max-h-[calc(100vh-400px)]">
+      <div className="flex-1 border rounded-lg overflow-hidden bg-gradient-to-br from-background to-muted max-h-[calc(100vh-400px)] relative">
         <TransformWrapper
           initialScale={1}
           minScale={0.5}
@@ -194,79 +234,209 @@ export const GraphView = ({ events, nodes, edges }: GraphViewProps) => {
               </div>
               <TransformComponent wrapperStyle={{ width: '100%', height: '100%' }}>
                 <svg width="1000" height="800" className="w-full h-full">
-                  {/* Draw edges */}
+                  <defs>
+                    {/* Gradient definitions */}
+                    <linearGradient id="studentGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+                      <stop offset="0%" stopColor="hsl(var(--graph-student))" stopOpacity="1" />
+                      <stop offset="100%" stopColor="hsl(var(--graph-student))" stopOpacity="0.7" />
+                    </linearGradient>
+                    <linearGradient id="bookGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+                      <stop offset="0%" stopColor="hsl(var(--graph-book))" stopOpacity="1" />
+                      <stop offset="100%" stopColor="hsl(var(--graph-book))" stopOpacity="0.7" />
+                    </linearGradient>
+                    {/* Glow filters */}
+                    <filter id="glow">
+                      <feGaussianBlur stdDeviation="3" result="coloredBlur"/>
+                      <feMerge>
+                        <feMergeNode in="coloredBlur"/>
+                        <feMergeNode in="SourceGraphic"/>
+                      </feMerge>
+                    </filter>
+                  </defs>
+
+                  {/* Draw edges with curves */}
                   {edges.map((edge, i) => {
                     const fromPos = positions.get(edge.from);
                     const toPos = positions.get(edge.to);
                     if (!fromPos || !toPos) return null;
 
                     const isHighlighted = highlightedEdges.has(`${edge.from}-${edge.to}`);
-                    const color = getEdgeColor(edge, isHighlighted);
+                    const isHovered = hoveredEdge === `${edge.from}-${edge.to}` ||
+                                     hoveredNode === edge.from || hoveredNode === edge.to;
+                    const color = getEdgeColor(edge, isHighlighted, isHovered);
+                    const width = getEdgeWidth(edge, isHighlighted, isHovered);
+                    const path = createCurvedPath(fromPos.x, fromPos.y, toPos.x, toPos.y);
+
+                    // Calculate arrow position
+                    const dx = toPos.x - fromPos.x;
+                    const dy = toPos.y - fromPos.y;
+                    const angle = Math.atan2(dy, dx);
+                    const arrowSize = 8;
+                    const offset = node => nodes.find(n => n.id === edge.to)?.type === 'student' ? 35 : 30;
+                    const arrowX = toPos.x - Math.cos(angle) * offset(edge.to);
+                    const arrowY = toPos.y - Math.sin(angle) * offset(edge.to);
 
                     return (
-                      <g key={`edge-${i}`}>
-                        <line
-                          x1={fromPos.x}
-                          y1={fromPos.y}
-                          x2={toPos.x}
-                          y2={toPos.y}
+                      <g 
+                        key={`edge-${i}`}
+                        onMouseEnter={() => setHoveredEdge(`${edge.from}-${edge.to}`)}
+                        onMouseLeave={() => setHoveredEdge(null)}
+                        style={{ cursor: 'pointer' }}
+                      >
+                        <path
+                          d={path}
                           stroke={color}
-                          strokeWidth={isHighlighted ? 3 : 2}
-                          strokeOpacity={isHighlighted ? 1 : 0.6}
+                          strokeWidth={width}
+                          strokeOpacity={(isHighlighted || isHovered) ? 0.9 : 0.5}
+                          strokeDasharray={edge.type === 'wants' ? '5,5' : 'none'}
+                          fill="none"
                           className={isHighlighted ? 'animate-pulse' : ''}
+                          filter={(isHighlighted || isHovered) ? 'url(#glow)' : 'none'}
+                          style={{ transition: 'all 0.3s ease' }}
                         />
                         {/* Arrow head */}
                         <polygon
-                          points={`${toPos.x},${toPos.y} ${toPos.x - 10},${toPos.y - 5} ${toPos.x - 10},${toPos.y + 5}`}
+                          points={`${arrowX},${arrowY} ${arrowX - arrowSize * Math.cos(angle - Math.PI / 6)},${arrowY - arrowSize * Math.sin(angle - Math.PI / 6)} ${arrowX - arrowSize * Math.cos(angle + Math.PI / 6)},${arrowY - arrowSize * Math.sin(angle + Math.PI / 6)}`}
                           fill={color}
-                          opacity={isHighlighted ? 1 : 0.6}
+                          opacity={(isHighlighted || isHovered) ? 0.9 : 0.6}
                         />
                       </g>
                     );
                   })}
 
                   {/* Draw nodes */}
-                  {nodes.map(node => {
-                    const pos = positions.get(node.id);
-                    if (!pos) return null;
+                  <TooltipProvider>
+                    {nodes.map(node => {
+                      const pos = positions.get(node.id);
+                      if (!pos) return null;
 
-                    const isHighlighted = highlightedNodes.has(node.id);
-                    const color = getNodeColor(node, isHighlighted);
-                    const level = visitLevel.get(node.id);
+                      const isHighlighted = highlightedNodes.has(node.id);
+                      const isHovered = hoveredNode === node.id;
+                      const connectedNodes = getConnectedNodes(node.id);
+                      const color = getNodeColor(node, isHighlighted, isHovered);
+                      const level = visitLevel.get(node.id);
+                      const size = node.type === 'student' ? 35 : 30;
 
-                    return (
-                      <g key={node.id}>
-                        <circle
-                          cx={pos.x}
-                          cy={pos.y}
-                          r={node.type === 'student' ? 30 : 25}
-                          fill={color}
-                          stroke="hsl(var(--border))"
-                          strokeWidth={isHighlighted ? 3 : 1}
-                          className={isHighlighted ? 'animate-pulse' : ''}
-                        />
-                        <text
-                          x={pos.x}
-                          y={pos.y}
-                          textAnchor="middle"
-                          dy=".3em"
-                          className="text-xs font-medium fill-foreground"
+                      return (
+                        <g 
+                          key={node.id}
+                          onMouseEnter={() => setHoveredNode(node.id)}
+                          onMouseLeave={() => setHoveredNode(null)}
+                          style={{ cursor: 'pointer' }}
                         >
-                          {node.label.length > 10 ? node.label.substring(0, 10) + '...' : node.label}
-                        </text>
-                        {level !== undefined && (
+                          {/* Shadow */}
+                          <circle
+                            cx={pos.x + 2}
+                            cy={pos.y + 2}
+                            r={size}
+                            fill="black"
+                            opacity="0.1"
+                          />
+                          
+                          {/* Node shape */}
+                          {node.type === 'student' ? (
+                            // Hexagon for students
+                            <polygon
+                              points={`${pos.x},${pos.y - size} ${pos.x + size * 0.866},${pos.y - size * 0.5} ${pos.x + size * 0.866},${pos.y + size * 0.5} ${pos.x},${pos.y + size} ${pos.x - size * 0.866},${pos.y + size * 0.5} ${pos.x - size * 0.866},${pos.y - size * 0.5}`}
+                              fill={isHighlighted || isHovered ? color : 'url(#studentGradient)'}
+                              stroke="hsl(var(--border))"
+                              strokeWidth={(isHighlighted || isHovered) ? 3 : 2}
+                              className={isHighlighted ? 'animate-pulse' : ''}
+                              filter={(isHighlighted || isHovered) ? 'url(#glow)' : 'none'}
+                              style={{ transition: 'all 0.3s ease' }}
+                            />
+                          ) : (
+                            // Rounded rectangle for books
+                            <rect
+                              x={pos.x - size * 0.8}
+                              y={pos.y - size * 0.6}
+                              width={size * 1.6}
+                              height={size * 1.2}
+                              rx="8"
+                              fill={isHighlighted || isHovered ? color : 'url(#bookGradient)'}
+                              stroke="hsl(var(--border))"
+                              strokeWidth={(isHighlighted || isHovered) ? 3 : 2}
+                              className={isHighlighted ? 'animate-pulse' : ''}
+                              filter={(isHighlighted || isHovered) ? 'url(#glow)' : 'none'}
+                              style={{ transition: 'all 0.3s ease' }}
+                            />
+                          )}
+
+                          {/* Icon */}
+                          <g transform={`translate(${pos.x - 8}, ${pos.y - 8})`}>
+                            {node.type === 'student' ? (
+                              <path
+                                d="M8 0C5.79 0 4 1.79 4 4s1.79 4 4 4 4-1.79 4-4-1.79-4-4-4zm0 6c-1.1 0-2-.9-2-2s.9-2 2-2 2 .9 2 2-.9 2-2 2zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"
+                                fill="white"
+                                transform="scale(1)"
+                              />
+                            ) : (
+                              <path
+                                d="M3 0C1.9 0 1.01.9 1.01 2L1 14c0 1.1.89 2 1.99 2H13c1.1 0 2-.9 2-2V6l-6-6H3zm7 7V1.5L14.5 7H10z"
+                                fill="white"
+                                transform="scale(1)"
+                              />
+                            )}
+                          </g>
+
+                          {/* Label */}
                           <text
                             x={pos.x}
-                            y={pos.y - 40}
+                            y={pos.y + size + 15}
                             textAnchor="middle"
-                            className="text-xs font-bold fill-primary"
+                            className="text-xs font-medium fill-foreground"
+                            style={{ pointerEvents: 'none' }}
                           >
-                            L{level}
+                            {node.label.length > 12 ? node.label.substring(0, 12) + '...' : node.label}
                           </text>
-                        )}
-                      </g>
-                    );
-                  })}
+
+                          {/* Level indicator */}
+                          {level !== undefined && (
+                            <g>
+                              <rect
+                                x={pos.x - 15}
+                                y={pos.y - size - 25}
+                                width="30"
+                                height="18"
+                                rx="9"
+                                fill="hsl(var(--primary))"
+                                opacity="0.9"
+                              />
+                              <text
+                                x={pos.x}
+                                y={pos.y - size - 13}
+                                textAnchor="middle"
+                                className="text-xs font-bold fill-primary-foreground"
+                              >
+                                L{level}
+                              </text>
+                            </g>
+                          )}
+
+                          {/* Connection count badge */}
+                          {(isHovered) && (
+                            <g>
+                              <circle
+                                cx={pos.x + size - 8}
+                                cy={pos.y - size + 8}
+                                r="10"
+                                fill="hsl(var(--graph-highlight))"
+                              />
+                              <text
+                                x={pos.x + size - 8}
+                                y={pos.y - size + 8}
+                                textAnchor="middle"
+                                dy=".3em"
+                                className="text-xs font-bold fill-white"
+                              >
+                                {connectedNodes.size}
+                              </text>
+                            </g>
+                          )}
+                        </g>
+                      );
+                    })}
+                  </TooltipProvider>
                 </svg>
               </TransformComponent>
             </>
@@ -286,20 +456,33 @@ export const GraphView = ({ events, nodes, edges }: GraphViewProps) => {
         </div>
       )}
 
-      {/* Statistics */}
-      <div className="flex gap-4 mt-4 p-4 bg-muted rounded-lg">
-        <div className="text-center">
-          <div className="text-2xl font-bold">{nodes.length}</div>
-          <div className="text-xs text-muted-foreground">Total Nodes</div>
-        </div>
-        <div className="text-center">
+      {/* Statistics - Enhanced */}
+      <div className="grid grid-cols-3 md:grid-cols-5 gap-4 mt-4">
+        <Card className="p-4 text-center shadow-md hover:shadow-lg transition-shadow">
+          <User className="w-6 h-6 mx-auto mb-2" style={{ color: 'hsl(var(--graph-student))' }} />
+          <div className="text-2xl font-bold">{nodes.filter(n => n.type === 'student').length}</div>
+          <div className="text-xs text-muted-foreground">Students</div>
+        </Card>
+        <Card className="p-4 text-center shadow-md hover:shadow-lg transition-shadow">
+          <BookOpen className="w-6 h-6 mx-auto mb-2" style={{ color: 'hsl(var(--graph-book))' }} />
+          <div className="text-2xl font-bold">{nodes.filter(n => n.type === 'book').length}</div>
+          <div className="text-xs text-muted-foreground">Books</div>
+        </Card>
+        <Card className="p-4 text-center shadow-md hover:shadow-lg transition-shadow">
+          <TrendingUp className="w-6 h-6 mx-auto mb-2 text-primary" />
           <div className="text-2xl font-bold">{edges.length}</div>
-          <div className="text-xs text-muted-foreground">Total Edges</div>
-        </div>
-        <div className="text-center">
-          <div className="text-2xl font-bold">{matchPaths.length}</div>
-          <div className="text-xs text-muted-foreground">Matches Found</div>
-        </div>
+          <div className="text-xs text-muted-foreground">Connections</div>
+        </Card>
+        <Card className="p-4 text-center shadow-md hover:shadow-lg transition-shadow">
+          <div className="text-2xl font-bold text-green-600">{matchPaths.length}</div>
+          <div className="text-xs text-muted-foreground">Matches</div>
+        </Card>
+        <Card className="p-4 text-center shadow-md hover:shadow-lg transition-shadow">
+          <div className="text-2xl font-bold text-orange-600">
+            {edges.length > 0 ? (edges.length / nodes.length).toFixed(1) : '0'}
+          </div>
+          <div className="text-xs text-muted-foreground">Avg Connections</div>
+        </Card>
       </div>
     </div>
   );

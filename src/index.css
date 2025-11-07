@@ -60,6 +60,14 @@ All colors MUST be HSL.
     --book-mist: 210 18% 91%; /* muted backgrounds */
     --book-blush: 36 17% 96%; /* base background */
     
+    /* Graph visualization colors */
+    --graph-student: 210 80% 50%; /* Blue for students */
+    --graph-book: 25 85% 55%; /* Orange for books */
+    --graph-edge-owns: 142 71% 45%; /* Green for owns */
+    --graph-edge-wants: 48 96% 53%; /* Yellow for wants */
+    --graph-edge-swap: 270 95% 60%; /* Purple for swaps */
+    --graph-highlight: 346 77% 50%; /* Red/pink for highlights */
+    
     /* Gradients */
     --gradient-hero: linear-gradient(90deg, rgba(248, 242, 239, 0.98) 0%, rgba(248, 242, 239, 0.7) 60%);
     --gradient-vignette: radial-gradient(circle at center, transparent 0%, rgba(210, 220, 228, 0.2) 100%);
@@ -125,6 +133,14 @@ All colors MUST be HSL.
     --book-sand: 25 26% 35%;
     --book-mist: 240 5% 25%;
     --book-blush: 240 10% 10%;
+    
+    /* Graph visualization colors - Dark */
+    --graph-student: 210 80% 60%; /* Brighter blue for students */
+    --graph-book: 25 85% 65%; /* Brighter orange for books */
+    --graph-edge-owns: 142 71% 55%; /* Brighter green for owns */
+    --graph-edge-wants: 48 96% 63%; /* Brighter yellow for wants */
+    --graph-edge-swap: 270 95% 70%; /* Brighter purple for swaps */
+    --graph-highlight: 346 77% 60%; /* Brighter red/pink for highlights */
     
     /* Gradients - Dark */
     --gradient-hero: linear-gradient(90deg, rgba(26, 26, 31, 0.98) 0%, rgba(26, 26, 31, 0.7) 60%);
