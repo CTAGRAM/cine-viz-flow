@@ -4,6 +4,7 @@ import { cn } from "@/lib/utils";
 import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
 import { NotificationsDropdown } from "@/components/NotificationsDropdown";
+import { ThemeToggle } from "@/components/ThemeToggle";
 import { useEffect, useState } from "react";
 
 export const NavigationRail = () => {
@@ -105,7 +106,8 @@ export const NavigationRail = () => {
         </NavLink>
       ))}
       
-      <div className="mt-auto">
+      <div className="mt-auto flex flex-col gap-4">
+        <ThemeToggle />
         <NavLink
           to={user ? "/profile" : "/auth"}
           className={({ isActive }) =>
